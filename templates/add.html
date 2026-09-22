@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Новая заявка</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 20px; }
+        form { background: white; padding: 20px; border-radius: 8px; max-width: 400px; }
+        input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Новая заявка</h2>
+    <form method="POST">
+        <label>Кабинет:</label>
+        <input type="text" name="room" required placeholder="Например, 204">
+        
+        <label>Ваше имя:</label>
+        <input type="text" name="author" placeholder="Иванова А.П.">
+        
+        <label>Что случилось?</label>
+        <textarea name="issue" rows="4" required placeholder="Не работает мышь..."></textarea>
+        
+        <button type="submit">Отправить</button>
+        <a href="/" style="margin-left: 10px;">Назад</a>
+    </form>
+</body>
+</html>
