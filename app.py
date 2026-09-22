@@ -191,6 +191,9 @@ def subscribe():
 
 
 init_db()
+@app.route('/sw.js')
+def service_worker():
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
 
 if __name__ == '__main__':
     app.run(debug=True)
