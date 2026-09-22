@@ -90,15 +90,24 @@
     <script>
         const VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy";
         function urlBase64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-            const rawData = window.atob(base64);
-            const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-            }
-            return outputArray;
-        }
+    // 1. Удаляем ВСЁ, кроме букв, цифр, дефиса и подчеркивания
+    const cleanedString = base64String.replace(/[^A-Za-z0-9\-_]/g, '');
+    
+    // 2. Добавляем padding
+    const padding = '='.repeat((4 - cleanedString.length % 4) % 4);
+    
+    // 3. Меняем URL-safe символы на стандартные
+    const base64 = (cleanedString + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+        
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
 
         function subscribeUser(registration) {
             registration.pushManager.subscribe({
