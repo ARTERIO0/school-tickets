@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
-# --- ИМПОРТЫ ДЛЯ PUSH ---
+
 from pywebpush import webpush, WebPushException
 
 app = Flask(__name__)
@@ -12,14 +12,20 @@ app.secret_key = 'school_tickets_secret_key_12345'
 DB_NAME = 'tickets.db'
 ADMIN_PASSWORD = 'admin123'  # Поменяй на свой пароль!
 
-# --- VAPID КЛЮЧИ (ВСТАВЬ СВОИ) ---
-VAPID_PUBLIC_KEY = "BBHfQbXHFrE5HscJ0B0uJJtdmgmHNckT8IYllyMi6m9xvDPjLcjxLwLnofcKuh1CK3yVlFtEnlPdDquT76rYwYc"
+VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy"
 
 VAPID_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
-tMk1UDwkK44u8hugY1YlgT71ddMnrA5yfwwEpyzuovM
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg1Zdpom9N8tzyUWA
+RrDCzC6P8V3ru1LyY+O6ADu0BQRANCAwVgf+etropNQcS8i1/IPNhKHST9Hb
+WD/1S2qa/Kp+tdSJYKdLDF1PrE/YaamsLQhqj1MHFxT3CjmR17FF8W
 -----END PRIVATE KEY-----"""
 
-VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}  # Поменяй на свою почту!
+VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}
+
+
+@app.route('/sw.js')
+def service_worker():
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
 
 
 def init_db():
@@ -33,7 +39,12 @@ def init_db():
                   status TEXT DEFAULT 'Новая',
                   created_at TEXT,
                   priority TEXT DEFAULT 'Обычная')''')
-    # Таблица для push-подписок
+    # Миграции: добавляем новые колонки, если их ещё нет
+    for col, col_def in [('category', "TEXT DEFAULT '📝 Другое'"), ('comment', 'TEXT')]:
+        try:
+            c.execute(f"ALTER TABLE tickets ADD COLUMN {col} {col_def}")
+        except sqlite3.OperationalError:
+            pass  # колонка уже существует
     c.execute('''CREATE TABLE IF NOT EXISTS subscriptions
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   endpoint TEXT UNIQUE NOT NULL,
@@ -52,19 +63,14 @@ def login_required(f):
     return decorated_function
 
 
-# --- ОТПРАВКА PUSH-УВЕДОМЛЕНИЙ ---
 def send_push_notification(title, body):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("SELECT endpoint, p256dh, auth FROM subscriptions")
     subs = c.fetchall()
     conn.close()
-
     for sub in subs:
-        sub_info = {
-            "endpoint": sub[0],
-            "keys": {"p256dh": sub[1], "auth": sub[2]}
-        }
+        sub_info = {"endpoint": sub[0], "keys": {"p256dh": sub[1], "auth": sub[2]}}
         try:
             webpush(
                 subscription_info=sub_info,
@@ -73,7 +79,6 @@ def send_push_notification(title, body):
                 vapid_claims=VAPID_CLAIMS
             )
         except WebPushException as e:
-            # Если подписка недействительна — удаляем её из базы
             if e.response and e.response.status_code in [404, 410]:
                 conn = sqlite3.connect(DB_NAME)
                 c = conn.cursor()
@@ -104,12 +109,28 @@ def logout():
 def index():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("""SELECT id, room, issue, author, status, created_at, priority
+    c.execute("""SELECT id, room, issue, author, status, created_at, priority, category, comment
                  FROM tickets
                  ORDER BY CASE WHEN priority = 'Срочная' THEN 0 ELSE 1 END, id DESC""")
     tickets = c.fetchall()
     conn.close()
     return render_template('index.html', tickets=tickets, vapid_public_key=VAPID_PUBLIC_KEY)
+
+
+@app.route('/api/tickets')
+def api_tickets():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""SELECT id, room, issue, author, status, created_at, priority, category, comment
+                 FROM tickets
+                 ORDER BY CASE WHEN priority = 'Срочная' THEN 0 ELSE 1 END, id DESC""")
+    tickets = c.fetchall()
+    conn.close()
+    return jsonify([{
+        'id': t[0], 'room': t[1], 'issue': t[2], 'author': t[3],
+        'status': t[4], 'created_at': t[5], 'priority': t[6],
+        'category': t[7], 'comment': t[8]
+    } for t in tickets])
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -119,21 +140,21 @@ def add():
         issue = request.form['issue']
         author = request.form.get('author', 'Аноним')
         priority = request.form.get('priority', 'Обычная')
+        category = request.form.get('category', '📝 Другое')
         created_at = datetime.now().strftime("%d.%m.%Y %H:%M")
 
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
-        c.execute("INSERT INTO tickets (room, issue, author, created_at, priority) VALUES (?, ?, ?, ?, ?)",
-                  (room, issue, author, created_at, priority))
+        c.execute("""INSERT INTO tickets (room, issue, author, created_at, priority, category)
+                     VALUES (?, ?, ?, ?, ?, ?)""",
+                  (room, issue, author, created_at, priority, category))
         conn.commit()
         conn.close()
 
-        # Отправляем push-уведомление
         send_push_notification(
             title=f"Новая заявка: каб. {room}",
-            body=f"{issue[:50]}{'...' if len(issue) > 50 else ''}"
+            body=f"{category}: {issue[:40]}{'...' if len(issue) > 40 else ''}"
         )
-
         return redirect(url_for('index'))
     return render_template('add.html')
 
@@ -160,21 +181,40 @@ def resolve(ticket_id):
     return redirect(url_for('index'))
 
 
-# --- СОХРАНЕНИЕ ПОДПИСКИ ---
+@app.route('/delete/<int:ticket_id>')
+@login_required
+def delete_ticket(ticket_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("DELETE FROM tickets WHERE id = ?", (ticket_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('index'))
+
+
+@app.route('/comment/<int:ticket_id>', methods=['POST'])
+@login_required
+def add_comment(ticket_id):
+    comment_text = request.form.get('comment', '').strip()
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("UPDATE tickets SET comment = ? WHERE id = ?", (comment_text, ticket_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('index'))
+
+
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     data = request.get_json()
     if not data:
-        return jsonify({"status": "error", "message": "No data"}), 400
-
+        return jsonify({"status": "error"}), 400
     endpoint = data.get('endpoint')
     keys = data.get('keys', {})
     p256dh = keys.get('p256dh')
     auth = keys.get('auth')
-
     if not endpoint or not p256dh or not auth:
-        return jsonify({"status": "error", "message": "Invalid subscription"}), 400
-
+        return jsonify({"status": "error"}), 400
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     try:
@@ -187,24 +227,8 @@ def subscribe():
         conn.close()
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/api/tickets')
-def api_tickets():
-    """Возвращает список заявок в JSON для автообновления."""
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("""SELECT id, room, issue, author, status, created_at, priority 
-                 FROM tickets 
-                 ORDER BY CASE WHEN priority = 'Срочная' THEN 0 ELSE 1 END, id DESC""")
-    tickets = c.fetchall()
-    conn.close()
-    return jsonify([{
-        'id': t[0], 'room': t[1], 'issue': t[2], 'author': t[3],
-        'status': t[4], 'created_at': t[5], 'priority': t[6]
-    } for t in tickets])
+
 init_db()
-@app.route('/sw.js')
-def service_worker():
-    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
 
 if __name__ == '__main__':
     app.run(debug=True)
