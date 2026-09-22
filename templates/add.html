@@ -6,8 +6,9 @@
     <style>
         body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 20px; }
         form { background: white; padding: 20px; border-radius: 8px; max-width: 400px; }
-        input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        input, textarea, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+        .urgent-option { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -21,6 +22,12 @@
         
         <label>Что случилось?</label>
         <textarea name="issue" rows="4" required placeholder="Не работает мышь..."></textarea>
+        
+        <label>Приоритет:</label>
+        <select name="priority">
+            <option value="Обычная">Обычная</option>
+            <option value="Срочная">🔥 Срочная (проектор, интернет и т.д.)</option>
+        </select>
         
         <button type="submit">Отправить</button>
         <a href="/" style="margin-left: 10px;">Назад</a>
