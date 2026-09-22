@@ -1,9 +1,16 @@
 import sqlite3
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__)
+# Секретный ключ нужен для работы сессий (чтобы сайт помнил, что ты вошел)
+app.secret_key = 'school_tickets_secret_key_12345' 
+
 DB_NAME = 'tickets.db'
+
+# ПАРОЛЬ ДЛЯ ВХОДА В АДМИНКУ (можешь поменять на свой)
+ADMIN_PASSWORD = 'admin123'
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -17,6 +24,31 @@ def init_db():
                   created_at TEXT)''')
     conn.commit()
     conn.close()
+
+# Декоратор: пускает только авторизованных
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form['password'] == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        else:
+            error = 'Неверный пароль'
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('index'))
 
 @app.route('/')
 def index():
@@ -45,6 +77,7 @@ def add():
     return render_template('add.html')
 
 @app.route('/resolve/<int:ticket_id>')
+@login_required  # <--- Защита: только для админа
 def resolve(ticket_id):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -53,7 +86,7 @@ def resolve(ticket_id):
     conn.close()
     return redirect(url_for('index'))
 
-# Вызываем init_db() здесь, чтобы база создалась при запуске Gunicorn
+# Создаем базу при запуске (для Gunicorn)
 init_db()
 
 if __name__ == '__main__':
