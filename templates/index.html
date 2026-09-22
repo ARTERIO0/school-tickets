@@ -2,112 +2,324 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Заявки техников</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель заявок</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        h1 { color: #333; margin: 0; }
-        .auth-links { display: flex; align-items: center; gap: 10px; }
-        .auth-links a { text-decoration: none; color: #3498db; font-size: 14px; }
-        .auth-links a:hover { text-decoration: underline; }
-        .ticket { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
-        .ticket.new { border-left: 5px solid #e74c3c; }
-        .ticket.progress { border-left: 5px solid #f1c40f; }
-        .ticket.done { border-left: 5px solid #2ecc71; opacity: 0.7; }
-
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
-        .badge.urgent { background: #e74c3c; }
-        .badge.normal { background: #95a5a6; }
-
-        .status { font-weight: bold; }
-        .btn { display: inline-block; padding: 10px 15px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 20px; }
-        .btn:hover { background: #2980b9; }
-
-        .action-btn { display: inline-block; padding: 6px 12px; font-size: 13px; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px; margin-right: 5px; }
-        .btn-progress { background: #f39c12; }
-        .btn-progress:hover { background: #e67e22; }
-        .btn-resolve { background: #2ecc71; }
-        .btn-resolve:hover { background: #27ae60; }
-
-        #enable-notifications {
-            background: #9b59b6;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 13px;
+        :root {
+            --bg: #f4f6fb;
+            --surface: #ffffff;
+            --surface-hover: #f8fafc;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-hover: 0 4px 12px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.06);
         }
-        #enable-notifications:hover { background: #8e44ad; }
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #273449;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+            --shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            background: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--surface); color: var(--text); }
+        .icon-btn {
+            width: 40px; height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+        .icon-btn:hover { background: var(--surface-hover); transform: translateY(-1px); }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+        .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+        .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .stat-new .stat-value { color: var(--danger); }
+        .stat-progress .stat-value { color: var(--warning); }
+        .stat-done .stat-value { color: var(--success); }
+        .stat-total .stat-value { color: var(--primary); }
+
+        /* Tickets */
+        .ticket {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            transition: all 0.25s ease;
+            animation: slideIn 0.3s ease;
+        }
+        .ticket:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .ticket-room {
+            font-size: 17px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ticket-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .ticket-issue {
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .ticket-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-urgent { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .badge-normal { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+        .badge-new { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .badge-progress { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .badge-done { background: rgba(16,185,129,0.15); color: var(--success); }
+
+        /* Action buttons */
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 8px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #fff;
+        }
+        .btn-progress { background: var(--warning); }
+        .btn-progress:hover { filter: brightness(0.92); transform: translateY(-1px); }
+        .btn-resolve { background: var(--success); }
+        .btn-resolve:hover { filter: brightness(0.92); transform: translateY(-1px); }
+
+        /* Empty state */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+        .empty-text { font-size: 15px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🛠️ Панель заявок</h1>
-        <div class="auth-links">
-            {% if session.get('logged_in') %}
-                <span style="font-size: 14px; color: #666;">Режим администрации</span>
-                <a href="/logout">Выйти</a>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Панель заявок</h1>
+            <div class="header-controls">
+                <button class="icon-btn" id="theme-toggle" title="Переключить тему">🌙</button>
+                {% if session.get('logged_in') %}
+                    <span class="badge badge-done">Режим администрации</span>
+                    <a href="/logout" class="btn btn-ghost">Выйти</a>
+                {% else %}
+                    <a href="/login" class="btn btn-ghost">Вход для администрации</a>
+                {% endif %}
+                <button id="enable-notifications" class="btn btn-ghost" style="display:none;">🔔 Уведомления</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card stat-total">
+                <div class="stat-value">{{ tickets|length }}</div>
+                <div class="stat-label">Всего заявок</div>
+            </div>
+            <div class="stat-card stat-new">
+                <div class="stat-value">{{ tickets|selectattr('4', 'equalto', 'Новая')|list|length }}</div>
+                <div class="stat-label">Новых</div>
+            </div>
+            <div class="stat-card stat-progress">
+                <div class="stat-value">{{ tickets|selectattr('4', 'equalto', 'В работе')|list|length }}</div>
+                <div class="stat-label">В работе</div>
+            </div>
+            <div class="stat-card stat-done">
+                <div class="stat-value">{{ tickets|selectattr('4', 'equalto', 'Выполнено')|list|length }}</div>
+                <div class="stat-label">Выполнено</div>
+            </div>
+        </div>
+
+        <a href="/add" class="btn" style="margin-bottom: 20px;">➕ Добавить заявку</a>
+
+        <div id="tickets-container">
+            {% if tickets %}
+                {% for ticket in tickets %}
+                    {% set status_badge = 'badge-new' if ticket[4] == 'Новая' else ('badge-progress' if ticket[4] == 'В работе' else 'badge-done') %}
+                    {% set status_icon = '🆕' if ticket[4] == 'Новая' else ('⏳' if ticket[4] == 'В работе' else '✅') %}
+                    <div class="ticket">
+                        <div class="ticket-header">
+                            <div class="ticket-room">🚪 Кабинет {{ ticket[1] }}</div>
+                            <span class="badge {{ status_badge }}">{{ status_icon }} {{ ticket[4] }}</span>
+                        </div>
+                        <div class="ticket-meta">
+                            {% if ticket[6] == 'Срочная' %}<span class="badge badge-urgent">🔥 Срочно</span> ·{% endif %}
+                            👤 {{ ticket[3] }} · 🕐 {{ ticket[5] }}
+                        </div>
+                        <div class="ticket-issue">{{ ticket[2] }}</div>
+                        {% if session.get('logged_in') %}
+                            <div class="ticket-actions">
+                                {% if ticket[4] == 'Новая' %}
+                                    <a href="/progress/{{ ticket[0] }}" class="action-btn btn-progress">⏳ Взять в работу</a>
+                                {% endif %}
+                                {% if ticket[4] != 'Выполнено' %}
+                                    <a href="/resolve/{{ ticket[0] }}" class="action-btn btn-resolve">✅ Выполнено</a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
             {% else %}
-                <a href="/login">Вход для администрации</a>
+                <div class="empty">
+                    <div class="empty-icon">📭</div>
+                    <div class="empty-text">Заявок пока нет. Всё работает!</div>
+                </div>
             {% endif %}
-            <button id="enable-notifications" style="display:none;">🔔 Включить уведомления</button>
         </div>
     </div>
 
-    <br>
-    <a href="/add" class="btn">➕ Добавить заявку</a>
-
-    <div id="tickets-container">
-        {% for ticket in tickets %}
-            {% set status_class = 'new' if ticket[4] == 'Новая' else ('progress' if ticket[4] == 'В работе' else 'done') %}
-            <div class="ticket {{ status_class }}">
-                <p>
-                    <strong>Кабинет:</strong> {{ ticket[1] }}
-                    {% if ticket[6] == 'Срочная' %}
-                        <span class="badge urgent">🔥 Срочно</span>
-                    {% else %}
-                        <span class="badge normal">Обычная</span>
-                    {% endif %}
-                </p>
-                <p><strong>Проблема:</strong> {{ ticket[2] }}</p>
-                <p><strong>От:</strong> {{ ticket[3] }} | <strong>Время:</strong> {{ ticket[5] }}</p>
-                <p><strong>Статус:</strong> <span class="status">{{ ticket[4] }}</span></p>
-
-                {% if session.get('logged_in') %}
-                    {% if ticket[4] == 'Новая' %}
-                        <a href="/progress/{{ ticket[0] }}" class="action-btn btn-progress">⏳ Взять в работу</a>
-                    {% endif %}
-                    {% if ticket[4] != 'Выполнено' %}
-                        <a href="/resolve/{{ ticket[0] }}" class="action-btn btn-resolve">✅ Выполнено</a>
-                    {% endif %}
-                {% endif %}
-            </div>
-        {% endfor %}
-    </div>
-
     <script>
+        // --- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        themeToggle.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+
+        themeToggle.addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        });
+
+        // --- WEB PUSH ---
         const VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy";
+
         function urlBase64ToUint8Array(base64String) {
-    // 1. Удаляем ВСЁ, кроме букв, цифр, дефиса и подчеркивания
-    const cleanedString = base64String.replace(/[^A-Za-z0-9\-_]/g, '');
-    
-    // 2. Добавляем padding
-    const padding = '='.repeat((4 - cleanedString.length % 4) % 4);
-    
-    // 3. Меняем URL-safe символы на стандартные
-    const base64 = (cleanedString + padding)
-        .replace(/\-/g, '+')
-        .replace(/_/g, '/');
-        
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
+            const cleanedString = base64String.replace(/[^A-Za-z0-9\-_]/g, '');
+            const padding = '='.repeat((4 - cleanedString.length % 4) % 4);
+            const base64 = (cleanedString + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
 
         function subscribeUser(registration) {
             registration.pushManager.subscribe({
@@ -122,11 +334,8 @@
                 });
             })
             .then(function(response) {
-                if (response.ok) {
-                    console.log('Подписка сохранена на сервере');
-                } else {
-                    console.error('Ошибка сохранения подписки');
-                }
+                if (response.ok) console.log('Подписка сохранена на сервере');
+                else console.error('Ошибка сохранения подписки');
             })
             .catch(function(error) {
                 console.error('Ошибка при подписке:', error);
@@ -140,7 +349,7 @@
                         subscribeUser(registration);
                     } else if (Notification.permission !== 'denied') {
                         const btn = document.getElementById('enable-notifications');
-                        btn.style.display = 'inline-block';
+                        btn.style.display = 'inline-flex';
                         btn.addEventListener('click', function() {
                             Notification.requestPermission().then(function(permission) {
                                 if (permission === 'granted') {
