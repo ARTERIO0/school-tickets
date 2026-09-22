@@ -305,6 +305,100 @@
             localStorage.setItem('theme', theme);
             themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
         });
+        // --- АВТООБНОВЛЕНИЕ ЗАЯВОК ---
+const ticketsContainer = document.getElementById('tickets-container');
+const isLoggedIn = {{ 'true' if session.get('logged_in') else 'false' }};
+let lastDataHash = '';
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function renderTicket(t) {
+    let statusBadge, statusIcon;
+    if (t.status === 'Новая') { statusBadge = 'badge-new'; statusIcon = '🆕'; }
+    else if (t.status === 'В работе') { statusBadge = 'badge-progress'; statusIcon = '⏳'; }
+    else { statusBadge = 'badge-done'; statusIcon = '✅'; }
+
+    let actionsHtml = '';
+    if (isLoggedIn) {
+        if (t.status === 'Новая') {
+            actionsHtml += `<a href="/progress/${t.id}" class="action-btn btn-progress">⏳ Взять в работу</a>`;
+        }
+        if (t.status !== 'Выполнено') {
+            actionsHtml += `<a href="/resolve/${t.id}" class="action-btn btn-resolve">✅ Выполнено</a>`;
+        }
+    }
+
+    const priorityHtml = t.priority === 'Срочная' 
+        ? '<span class="badge badge-urgent">🔥 Срочно</span> · ' 
+        : '';
+
+    return `
+        <div class="ticket">
+            <div class="ticket-header">
+                <div class="ticket-room">🚪 Кабинет ${escapeHtml(t.room)}</div>
+                <span class="badge ${statusBadge}">${statusIcon} ${t.status}</span>
+            </div>
+            <div class="ticket-meta">
+                ${priorityHtml}👤 ${escapeHtml(t.author)} · 🕐 ${escapeHtml(t.created_at)}
+            </div>
+            <div class="ticket-issue">${escapeHtml(t.issue)}</div>
+            ${actionsHtml ? `<div class="ticket-actions">${actionsHtml}</div>` : ''}
+        </div>
+    `;
+}
+
+function renderTickets(tickets) {
+    if (!tickets.length) {
+        ticketsContainer.innerHTML = `
+            <div class="empty">
+                <div class="empty-icon">📭</div>
+                <div class="empty-text">Заявок пока нет. Всё работает!</div>
+            </div>`;
+        return;
+    }
+    ticketsContainer.innerHTML = tickets.map(renderTicket).join('');
+}
+
+function updateStats(tickets) {
+    const total = tickets.length;
+    const newCount = tickets.filter(t => t.status === 'Новая').length;
+    const progressCount = tickets.filter(t => t.status === 'В работе').length;
+    const doneCount = tickets.filter(t => t.status === 'Выполнено').length;
+
+    document.querySelector('.stat-total .stat-value').textContent = total;
+    document.querySelector('.stat-new .stat-value').textContent = newCount;
+    document.querySelector('.stat-progress .stat-value').textContent = progressCount;
+    document.querySelector('.stat-done .stat-value').textContent = doneCount;
+}
+
+async function fetchTickets() {
+    try {
+        const res = await fetch('/api/tickets');
+        if (!res.ok) return;
+        const tickets = await res.json();
+        const hash = JSON.stringify(tickets);
+        if (hash !== lastDataHash) {
+            const wasEmpty = lastDataHash === '';
+            lastDataHash = hash;
+            renderTickets(tickets);
+            updateStats(tickets);
+            if (!wasEmpty) {
+                console.log('🔄 Список заявок обновлён');
+            }
+        }
+    } catch (e) {
+        console.error('Ошибка автообновления:', e);
+    }
+}
+
+// Первая загрузка - запоминаем текущее состояние (уже отрендеренное Jinja)
+// Затем запускаем опрос каждые 10 секунд
+setTimeout(fetchTickets, 5000);
+setInterval(fetchTickets, 10000);
 
         // --- WEB PUSH ---
         const VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy";
