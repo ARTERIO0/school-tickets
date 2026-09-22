@@ -9,119 +9,60 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f4f6fb;
-            --surface: #ffffff;
-            --surface-hover: #f8fafc;
-            --text: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
+            --bg: #f4f6fb; --surface: #ffffff; --surface-hover: #f8fafc;
+            --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+            --primary: #3b82f6; --primary-hover: #2563eb;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
             --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
             --shadow-hover: 0 4px 12px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.06);
         }
         [data-theme="dark"] {
-            --bg: #0f172a;
-            --surface: #1e293b;
-            --surface-hover: #273449;
-            --text: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --primary: #3b82f6;
-            --primary-hover: #60a5fa;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
+            --bg: #0f172a; --surface: #1e293b; --surface-hover: #273449;
+            --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --primary: #3b82f6; --primary-hover: #60a5fa;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
             --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
             --shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 24px;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; padding: 24px;
             transition: background 0.3s ease, color 0.3s ease;
         }
         .container { max-width: 900px; margin: 0 auto; }
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
         .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-        /* Buttons */
         .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 16px;
-            background: var(--primary);
-            color: #fff;
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 16px; background: var(--primary); color: #fff;
+            text-decoration: none; border-radius: 10px; font-size: 14px;
+            font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease;
+            font-family: inherit;
         }
         .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-        }
+        .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
         .btn-ghost:hover { background: var(--surface); color: var(--text); }
         .icon-btn {
-            width: 40px; height: 40px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.2s ease;
-            color: var(--text);
+            width: 40px; height: 40px; display: inline-flex; align-items: center;
+            justify-content: center; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 10px;
+            cursor: pointer; font-size: 18px; transition: all 0.2s ease; color: var(--text);
         }
         .icon-btn:hover { background: var(--surface-hover); transform: translateY(-1px); }
 
-        /* Stats */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
-        }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
         .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px; box-shadow: var(--shadow);
+            transition: all 0.3s ease; cursor: pointer;
         }
         .stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+        .stat-card.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
         .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
         .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
         .stat-new .stat-value { color: var(--danger); }
@@ -129,92 +70,67 @@
         .stat-done .stat-value { color: var(--success); }
         .stat-total .stat-value { color: var(--primary); }
 
-        /* Tickets */
         .ticket {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 18px;
-            margin-bottom: 12px;
-            box-shadow: var(--shadow);
-            transition: all 0.25s ease;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;
+            box-shadow: var(--shadow); transition: all 0.25s ease;
             animation: slideIn 0.3s ease;
         }
         .ticket:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+        .ticket.overdue { border-left: 4px solid var(--danger); }
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .ticket-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
+        .ticket-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+        .ticket-room { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .ticket-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .ticket-meta .overdue-text { color: var(--danger); font-weight: 600; }
+        .ticket-issue { font-size: 15px; line-height: 1.5; margin-bottom: 10px; }
+        .ticket-comment {
+            background: rgba(59,130,246,0.08); border-left: 3px solid var(--primary);
+            padding: 8px 12px; border-radius: 6px; font-size: 14px;
+            color: var(--text); margin-bottom: 10px;
         }
-        .ticket-room {
-            font-size: 17px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .ticket-meta {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-        .ticket-issue {
-            font-size: 15px;
-            line-height: 1.5;
-            margin-bottom: 12px;
-        }
-        .ticket-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .ticket-comment-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+        .ticket-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-        /* Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
         .badge-urgent { background: rgba(239,68,68,0.15); color: var(--danger); }
         .badge-normal { background: rgba(100,116,139,0.15); color: var(--text-muted); }
         .badge-new { background: rgba(239,68,68,0.15); color: var(--danger); }
         .badge-progress { background: rgba(245,158,11,0.15); color: var(--warning); }
         .badge-done { background: rgba(16,185,129,0.15); color: var(--success); }
 
-        /* Action buttons */
         .action-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 7px 14px;
-            font-size: 13px;
-            font-weight: 500;
-            border-radius: 8px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #fff;
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 7px 14px; font-size: 13px; font-weight: 500;
+            border-radius: 8px; text-decoration: none; border: none;
+            cursor: pointer; transition: all 0.2s ease; color: #fff;
+            font-family: inherit;
         }
         .btn-progress { background: var(--warning); }
         .btn-progress:hover { filter: brightness(0.92); transform: translateY(-1px); }
         .btn-resolve { background: var(--success); }
         .btn-resolve:hover { filter: brightness(0.92); transform: translateY(-1px); }
+        .btn-delete { background: var(--danger); }
+        .btn-delete:hover { filter: brightness(0.92); transform: translateY(-1px); }
 
-        /* Empty state */
-        .empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
+        .comment-form { display: flex; gap: 6px; margin-top: 8px; }
+        .comment-form input {
+            flex: 1; padding: 8px 12px; border: 1px solid var(--border);
+            border-radius: 8px; background: var(--bg); color: var(--text);
+            font-family: inherit; font-size: 13px;
         }
+        .comment-form input:focus { outline: none; border-color: var(--primary); }
+        .comment-form button {
+            padding: 8px 14px; background: var(--primary); color: #fff;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-size: 13px; font-weight: 500; font-family: inherit;
+        }
+        .comment-form button:hover { background: var(--primary-hover); }
+
+        .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
         .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
         .empty-text { font-size: 15px; }
     </style>
@@ -236,60 +152,27 @@
         </div>
 
         <div class="stats">
-            <div class="stat-card stat-total">
-                <div class="stat-value">{{ tickets|length }}</div>
-                <div class="stat-label">Всего заявок</div>
+            <div class="stat-card stat-total active" data-filter="all">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Всего</div>
             </div>
-            <div class="stat-card stat-new">
-                <div class="stat-value">{{ tickets|selectattr('4', 'equalto', 'Новая')|list|length }}</div>
-                <div class="stat-label">Новых</div>
+            <div class="stat-card stat-new" data-filter="Новая">
+                <div class="stat-value" id="stat-new">0</div>
+                <div class="stat-label">Новые</div>
             </div>
-            <div class="stat-card stat-progress">
-                <div class="stat-value">{{ tickets|selectattr('4', 'equalto', 'В работе')|list|length }}</div>
+            <div class="stat-card stat-progress" data-filter="В работе">
+                <div class="stat-value" id="stat-progress">0</div>
                 <div class="stat-label">В работе</div>
             </div>
-            <div class="stat-card stat-done">
-                <div class="stat-value">{{ tickets|selectattr('4', 'equalto', 'Выполнено')|list|length }}</div>
+            <div class="stat-card stat-done" data-filter="Выполнено">
+                <div class="stat-value" id="stat-done">0</div>
                 <div class="stat-label">Выполнено</div>
             </div>
         </div>
 
         <a href="/add" class="btn" style="margin-bottom: 20px;">➕ Добавить заявку</a>
 
-        <div id="tickets-container">
-            {% if tickets %}
-                {% for ticket in tickets %}
-                    {% set status_badge = 'badge-new' if ticket[4] == 'Новая' else ('badge-progress' if ticket[4] == 'В работе' else 'badge-done') %}
-                    {% set status_icon = '🆕' if ticket[4] == 'Новая' else ('⏳' if ticket[4] == 'В работе' else '✅') %}
-                    <div class="ticket">
-                        <div class="ticket-header">
-                            <div class="ticket-room">🚪 Кабинет {{ ticket[1] }}</div>
-                            <span class="badge {{ status_badge }}">{{ status_icon }} {{ ticket[4] }}</span>
-                        </div>
-                        <div class="ticket-meta">
-                            {% if ticket[6] == 'Срочная' %}<span class="badge badge-urgent">🔥 Срочно</span> ·{% endif %}
-                            👤 {{ ticket[3] }} · 🕐 {{ ticket[5] }}
-                        </div>
-                        <div class="ticket-issue">{{ ticket[2] }}</div>
-                        {% if session.get('logged_in') %}
-                            <div class="ticket-actions">
-                                {% if ticket[4] == 'Новая' %}
-                                    <a href="/progress/{{ ticket[0] }}" class="action-btn btn-progress">⏳ Взять в работу</a>
-                                {% endif %}
-                                {% if ticket[4] != 'Выполнено' %}
-                                    <a href="/resolve/{{ ticket[0] }}" class="action-btn btn-resolve">✅ Выполнено</a>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty">
-                    <div class="empty-icon">📭</div>
-                    <div class="empty-text">Заявок пока нет. Всё работает!</div>
-                </div>
-            {% endif %}
-        </div>
+        <div id="tickets-container"></div>
     </div>
 
     <script>
@@ -298,107 +181,168 @@
         const currentTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', currentTheme);
         themeToggle.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
-
         themeToggle.addEventListener('click', () => {
             const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
             themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
         });
-        // --- АВТООБНОВЛЕНИЕ ЗАЯВОК ---
-const ticketsContainer = document.getElementById('tickets-container');
-const isLoggedIn = {{ 'true' if session.get('logged_in') else 'false' }};
-let lastDataHash = '';
 
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
+        // --- ФИЛЬТРЫ ---
+        let currentFilter = 'all';
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                currentFilter = card.dataset.filter;
+                renderTickets(lastTickets);
+            });
+        });
 
-function renderTicket(t) {
-    let statusBadge, statusIcon;
-    if (t.status === 'Новая') { statusBadge = 'badge-new'; statusIcon = '🆕'; }
-    else if (t.status === 'В работе') { statusBadge = 'badge-progress'; statusIcon = '⏳'; }
-    else { statusBadge = 'badge-done'; statusIcon = '✅'; }
+        // --- АВТООБНОВЛЕНИЕ ---
+        const ticketsContainer = document.getElementById('tickets-container');
+        const isLoggedIn = {{ 'true' if session.get('logged_in') else 'false' }};
+        let lastDataHash = '';
+        let lastTickets = [];
 
-    let actionsHtml = '';
-    if (isLoggedIn) {
-        if (t.status === 'Новая') {
-            actionsHtml += `<a href="/progress/${t.id}" class="action-btn btn-progress">⏳ Взять в работу</a>`;
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
-        if (t.status !== 'Выполнено') {
-            actionsHtml += `<a href="/resolve/${t.id}" class="action-btn btn-resolve">✅ Выполнено</a>`;
+
+        function timeAgo(dateStr) {
+            try {
+                const [datePart, timePart] = dateStr.split(' ');
+                const [day, month, year] = datePart.split('.');
+                const [hours, minutes] = timePart.split(':');
+                const date = new Date(year, month - 1, day, hours, minutes);
+                const diff = Date.now() - date.getTime();
+                const mins = Math.floor(diff / 60000);
+                if (mins < 1) return 'только что';
+                if (mins < 60) return `${mins} мин назад`;
+                const h = Math.floor(mins / 60);
+                if (h < 24) return `${h} ч назад`;
+                const d = Math.floor(h / 24);
+                if (d === 1) return 'вчера';
+                return `${d} дн назад`;
+            } catch (e) { return dateStr; }
         }
-    }
 
-    const priorityHtml = t.priority === 'Срочная' 
-        ? '<span class="badge badge-urgent">🔥 Срочно</span> · ' 
-        : '';
+        function isOverdue(dateStr) {
+            try {
+                const [datePart, timePart] = dateStr.split(' ');
+                const [day, month, year] = datePart.split('.');
+                const [hours, minutes] = timePart.split(':');
+                const date = new Date(year, month - 1, day, hours, minutes);
+                const days = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+                return days >= 3;
+            } catch (e) { return false; }
+        }
 
-    return `
-        <div class="ticket">
-            <div class="ticket-header">
-                <div class="ticket-room">🚪 Кабинет ${escapeHtml(t.room)}</div>
-                <span class="badge ${statusBadge}">${statusIcon} ${t.status}</span>
-            </div>
-            <div class="ticket-meta">
-                ${priorityHtml}👤 ${escapeHtml(t.author)} · 🕐 ${escapeHtml(t.created_at)}
-            </div>
-            <div class="ticket-issue">${escapeHtml(t.issue)}</div>
-            ${actionsHtml ? `<div class="ticket-actions">${actionsHtml}</div>` : ''}
-        </div>
-    `;
-}
+        function renderTicket(t) {
+            let statusBadge, statusIcon;
+            if (t.status === 'Новая') { statusBadge = 'badge-new'; statusIcon = '🆕'; }
+            else if (t.status === 'В работе') { statusBadge = 'badge-progress'; statusIcon = '⏳'; }
+            else { statusBadge = 'badge-done'; statusIcon = '✅'; }
 
-function renderTickets(tickets) {
-    if (!tickets.length) {
-        ticketsContainer.innerHTML = `
-            <div class="empty">
-                <div class="empty-icon">📭</div>
-                <div class="empty-text">Заявок пока нет. Всё работает!</div>
-            </div>`;
-        return;
-    }
-    ticketsContainer.innerHTML = tickets.map(renderTicket).join('');
-}
+            const overdue = t.status !== 'Выполнено' && isOverdue(t.created_at);
+            const timeClass = overdue ? 'overdue-text' : '';
 
-function updateStats(tickets) {
-    const total = tickets.length;
-    const newCount = tickets.filter(t => t.status === 'Новая').length;
-    const progressCount = tickets.filter(t => t.status === 'В работе').length;
-    const doneCount = tickets.filter(t => t.status === 'Выполнено').length;
+            let actionsHtml = '';
+            if (isLoggedIn) {
+                if (t.status === 'Новая') {
+                    actionsHtml += `<a href="/progress/${t.id}" class="action-btn btn-progress">⏳ В работу</a>`;
+                }
+                if (t.status !== 'Выполнено') {
+                    actionsHtml += `<a href="/resolve/${t.id}" class="action-btn btn-resolve">✅ Выполнено</a>`;
+                }
+                actionsHtml += `<a href="/delete/${t.id}" class="action-btn btn-delete" onclick="return confirm('Удалить заявку №${t.id}?')">🗑️ Удалить</a>`;
+            }
 
-    document.querySelector('.stat-total .stat-value').textContent = total;
-    document.querySelector('.stat-new .stat-value').textContent = newCount;
-    document.querySelector('.stat-progress .stat-value').textContent = progressCount;
-    document.querySelector('.stat-done .stat-value').textContent = doneCount;
-}
+            const priorityHtml = t.priority === 'Срочная'
+                ? '<span class="badge badge-urgent">🔥 Срочно</span>'
+                : '';
 
-async function fetchTickets() {
-    try {
-        const res = await fetch('/api/tickets');
-        if (!res.ok) return;
-        const tickets = await res.json();
-        const hash = JSON.stringify(tickets);
-        if (hash !== lastDataHash) {
-            const wasEmpty = lastDataHash === '';
-            lastDataHash = hash;
-            renderTickets(tickets);
-            updateStats(tickets);
-            if (!wasEmpty) {
-                console.log('🔄 Список заявок обновлён');
+            const commentHtml = t.comment
+                ? `<div class="ticket-comment"><div class="ticket-comment-label">💬 Комментарий администрации:</div>${escapeHtml(t.comment)}</div>`
+                : '';
+
+            let commentFormHtml = '';
+            if (isLoggedIn) {
+                commentFormHtml = `
+                    <form class="comment-form" method="POST" action="/comment/${t.id}">
+                        <input type="text" name="comment" placeholder="Написать комментарий..." value="${t.comment ? escapeHtml(t.comment) : ''}">
+                        <button type="submit">Отправить</button>
+                    </form>`;
+            }
+
+            return `
+                <div class="ticket ${overdue ? 'overdue' : ''}">
+                    <div class="ticket-header">
+                        <div class="ticket-room">🚪 Кабинет ${escapeHtml(t.room)}</div>
+                        <span class="badge ${statusBadge}">${statusIcon} ${t.status}</span>
+                    </div>
+                    <div class="ticket-meta">
+                        <span>${escapeHtml(t.category)}</span> ·
+                        ${priorityHtml}
+                        <span>👤 ${escapeHtml(t.author)}</span> ·
+                        <span class="${timeClass}">🕐 ${timeAgo(t.created_at)}</span>
+                    </div>
+                    <div class="ticket-issue">${escapeHtml(t.issue)}</div>
+                    ${commentHtml}
+                    ${actionsHtml ? `<div class="ticket-actions">${actionsHtml}</div>` : ''}
+                    ${commentFormHtml}
+                </div>
+            `;
+        }
+
+        function renderTickets(tickets) {
+            lastTickets = tickets;
+            let filtered = tickets;
+            if (currentFilter !== 'all') {
+                filtered = tickets.filter(t => t.status === currentFilter);
+            }
+            if (!filtered.length) {
+                const msg = currentFilter === 'all'
+                    ? 'Заявок пока нет. Всё работает!'
+                    : 'В этой категории заявок нет.';
+                ticketsContainer.innerHTML = `
+                    <div class="empty">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-text">${msg}</div>
+                    </div>`;
+                return;
+            }
+            ticketsContainer.innerHTML = filtered.map(renderTicket).join('');
+        }
+
+        function updateStats(tickets) {
+            document.getElementById('stat-total').textContent = tickets.length;
+            document.getElementById('stat-new').textContent = tickets.filter(t => t.status === 'Новая').length;
+            document.getElementById('stat-progress').textContent = tickets.filter(t => t.status === 'В работе').length;
+            document.getElementById('stat-done').textContent = tickets.filter(t => t.status === 'Выполнено').length;
+        }
+
+        async function fetchTickets() {
+            try {
+                const res = await fetch('/api/tickets');
+                if (!res.ok) return;
+                const tickets = await res.json();
+                const hash = JSON.stringify(tickets);
+                if (hash !== lastDataHash) {
+                    lastDataHash = hash;
+                    renderTickets(tickets);
+                    updateStats(tickets);
+                }
+            } catch (e) {
+                console.error('Ошибка автообновления:', e);
             }
         }
-    } catch (e) {
-        console.error('Ошибка автообновления:', e);
-    }
-}
 
-// Первая загрузка - запоминаем текущее состояние (уже отрендеренное Jinja)
-// Затем запускаем опрос каждые 10 секунд
-setTimeout(fetchTickets, 5000);
-setInterval(fetchTickets, 10000);
+        fetchTickets();
+        setInterval(fetchTickets, 10000);
 
         // --- WEB PUSH ---
         const VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy";
@@ -409,9 +353,7 @@ setInterval(fetchTickets, 10000);
             const base64 = (cleanedString + padding).replace(/\-/g, '+').replace(/_/g, '/');
             const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-            }
+            for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
             return outputArray;
         }
 
@@ -420,32 +362,28 @@ setInterval(fetchTickets, 10000);
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
             })
-            .then(function(subscription) {
-                return fetch('/subscribe', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(subscription)
-                });
+            .then(subscription => fetch('/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscription)
+            }))
+            .then(response => {
+                if (response.ok) console.log('Подписка сохранена');
+                else console.error('Ошибка сохранения');
             })
-            .then(function(response) {
-                if (response.ok) console.log('Подписка сохранена на сервере');
-                else console.error('Ошибка сохранения подписки');
-            })
-            .catch(function(error) {
-                console.error('Ошибка при подписке:', error);
-            });
+            .catch(error => console.error('Ошибка при подписке:', error));
         }
 
         if ('serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.register('/sw.js')
-                .then(function(registration) {
+                .then(registration => {
                     if (Notification.permission === 'granted') {
                         subscribeUser(registration);
                     } else if (Notification.permission !== 'denied') {
                         const btn = document.getElementById('enable-notifications');
                         btn.style.display = 'inline-flex';
                         btn.addEventListener('click', function() {
-                            Notification.requestPermission().then(function(permission) {
+                            Notification.requestPermission().then(permission => {
                                 if (permission === 'granted') {
                                     subscribeUser(registration);
                                     btn.style.display = 'none';
@@ -454,9 +392,7 @@ setInterval(fetchTickets, 10000);
                         });
                     }
                 })
-                .catch(function(error) {
-                    console.error('Ошибка регистрации Service Worker:', error);
-                });
+                .catch(error => console.error('Ошибка регистрации SW:', error));
         }
     </script>
 </body>
