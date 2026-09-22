@@ -1,110 +1,28 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новая заявка</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #f4f6fb; --surface: #ffffff; --text: #1e293b; --text-muted: #64748b;
-            --border: #e2e8f0; --primary: #3b82f6; --primary-hover: #2563eb;
-            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
-        }
-        [data-theme="dark"] {
-            --bg: #0f172a; --surface: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8;
-            --border: #334155; --primary: #3b82f6; --primary-hover: #60a5fa;
-            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg); color: var(--text);
-            min-height: 100vh; padding: 24px;
-            display: flex; justify-content: center; align-items: flex-start;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-        .container { width: 100%; max-width: 500px; margin-top: 40px; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
-        .icon-btn {
-            width: 40px; height: 40px; display: inline-flex;
-            align-items: center; justify-content: center;
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 10px; cursor: pointer; font-size: 18px;
-            transition: all 0.2s ease; color: var(--text);
-        }
-        .icon-btn:hover { transform: translateY(-1px); }
-        form {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 16px; padding: 28px; box-shadow: var(--shadow);
-        }
-        label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--text-muted); }
-        input, textarea, select {
-            width: 100%; padding: 11px 14px;
-            border: 1px solid var(--border); border-radius: 10px;
-            background: var(--bg); color: var(--text);
-            font-family: inherit; font-size: 14px;
-            margin-bottom: 16px; transition: border-color 0.2s ease;
-        }
-        input:focus, textarea:focus, select:focus {
-            outline: none; border-color: var(--primary);
-        }
-        textarea { resize: vertical; min-height: 100px; }
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-            padding: 12px 20px; background: var(--primary); color: #fff;
-            border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s ease; width: 100%;
-            font-family: inherit;
-        }
-        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .back-link {
-            display: block; text-align: center; margin-top: 16px;
-            color: var(--text-muted); text-decoration: none; font-size: 14px;
-        }
-        .back-link:hover { color: var(--text); }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="top-bar">
-            <h1>📝 Новая заявка</h1>
-            <button class="icon-btn" id="theme-toggle" title="Переключить тему">🌙</button>
-        </div>
-        <form method="POST">
-            <label>Кабинет</label>
-            <input type="text" name="room" required placeholder="Например, 204">
+<form method="POST">
+    <label>Кабинет</label>
+    <input type="text" name="room" required placeholder="Например, 204">
 
-            <label>Ваше имя</label>
-            <input type="text" name="author" placeholder="Иванова А.П.">
+    <label>Ваше имя</label>
+    <input type="text" name="author" placeholder="Иванова А.П.">
 
-            <label>Что случилось?</label>
-            <textarea name="issue" required placeholder="Опишите проблему подробно..."></textarea>
+    <label>Что сломалось?</label>
+    <select name="category">
+        <option value="🖨️ Принтер">🖨️ Принтер</option>
+        <option value="💻 Компьютер">💻 Компьютер</option>
+        <option value="🌐 Интернет">🌐 Интернет</option>
+        <option value="📽️ Проектор">📽️ Проектор</option>
+        <option value="📝 Другое">📝 Другое</option>
+    </select>
 
-            <label>Приоритет</label>
-            <select name="priority">
-                <option value="Обычная">Обычная</option>
-                <option value="Срочная">🔥 Срочная</option>
-            </select>
+    <label>Опишите проблему</label>
+    <textarea name="issue" required placeholder="Например: не печатает, зажевало бумагу..."></textarea>
 
-            <button type="submit">Отправить заявку</button>
-            <a href="/" class="back-link">← Назад к списку</a>
-        </form>
-    </div>
+    <label>Насколько срочно?</label>
+    <select name="priority">
+        <option value="Обычная">Обычная</option>
+        <option value="Срочная">🔥 Срочная (нужно на уроке)</option>
+    </select>
 
-    <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        themeToggle.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
-        themeToggle.addEventListener('click', () => {
-            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-        });
-    </script>
-</body>
-</html>
+    <button type="submit">Отправить заявку</button>
+    <a href="/" class="back-link">← Назад к списку</a>
+</form>
