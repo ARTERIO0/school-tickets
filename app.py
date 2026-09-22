@@ -141,7 +141,7 @@ def add():
         author = request.form.get('author', 'Аноним')
         priority = request.form.get('priority', 'Обычная')
         category = request.form.get('category', '📝 Другое')
-        created_at = datetime.now().strftime("%d.%m.%Y %H:%M")
+        created_at = datetime.utcnow().isoformat()
 
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
