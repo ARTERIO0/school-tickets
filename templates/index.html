@@ -373,34 +373,50 @@
             return 'linear-gradient(135deg, #64748b, #94a3b8)';
         }
 
-        function timeAgo(dateStr) {
-            try {
-                const [datePart, timePart] = dateStr.split(' ');
-                const [day, month, year] = datePart.split('.');
-                const [hours, minutes] = timePart.split(':');
-                const date = new Date(year, month - 1, day, hours, minutes);
-                const diff = Date.now() - date.getTime();
-                const mins = Math.floor(diff / 60000);
-                if (mins < 1) return 'только что';
-                if (mins < 60) return `${mins} мин назад`;
-                const h = Math.floor(mins / 60);
-                if (h < 24) return `${h} ч назад`;
-                const d = Math.floor(h / 24);
-                if (d === 1) return 'вчера';
-                return `${d} дн назад`;
-            } catch (e) { return dateStr; }
-        }
+        function parseDate(str) {
+    if (!str) return new Date();
+    // Новый формат: ISO (2026-09-22T19:51:18.507265)
+    if (str.includes('T')) {
+        // Убираем микросекунды, оставляем миллисекунды — некоторые браузеры не любят 6 знаков
+        let cleaned = str.replace(/(\.\d{3})\d+/, '$1');
+        // Если нет таймзоны — добавляем Z (UTC)
+        if (!cleaned.match(/[Z+\-]\d*$/)) cleaned += 'Z';
+        return new Date(cleaned);
+    }
+    // Старый формат: dd.mm.yyyy hh:mm
+    const m = str.match(/(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+)/);
+    if (m) return new Date(m[3], m[2] - 1, m[1], m[4], m[5]);
+    return new Date(str);
+}
 
-        function isOverdue(dateStr) {
-            try {
-                const [datePart, timePart] = dateStr.split(' ');
-                const [day, month, year] = datePart.split('.');
-                const [hours, minutes] = timePart.split(':');
-                const date = new Date(year, month - 1, day, hours, minutes);
-                const days = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
-                return days >= 3;
-            } catch (e) { return false; }
-        }
+function timeAgo(isoStr) {
+    try {
+        const date = parseDate(isoStr);
+        const diff = Date.now() - date.getTime();
+        const secs = Math.floor(diff / 1000);
+        if (secs < 5) return 'только что';
+        if (secs < 60) return `${secs} сек назад`;
+        const mins = Math.floor(secs / 60);
+        if (mins < 60) return `${mins} мин назад`;
+        const h = Math.floor(mins / 60);
+        if (h < 24) return `${h} ч назад`;
+        const d = Math.floor(h / 24);
+        if (d === 1) return 'вчера';
+        if (d < 7) return `${d} дн назад`;
+        return date.toLocaleDateString('ru-RU');
+    } catch (e) { 
+        console.error('Ошибка парсинга даты:', isoStr, e);
+        return isoStr; 
+    }
+}
+
+function isOverdue(isoStr) {
+    try {
+        const date = parseDate(isoStr);
+        const days = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+        return days >= 3;
+    } catch (e) { return false; }
+}
 
         function renderTicket(t, index) {
             let statusClass, statusBadge, statusIcon;
