@@ -10,13 +10,25 @@
         .auth-links a { text-decoration: none; color: #3498db; font-size: 14px; margin-left: 15px; }
         .auth-links a:hover { text-decoration: underline; }
         .ticket { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        /* Цветовые индикаторы */
         .ticket.new { border-left: 5px solid #e74c3c; }
+        .ticket.progress { border-left: 5px solid #f1c40f; }
         .ticket.done { border-left: 5px solid #2ecc71; opacity: 0.7; }
+        
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
+        .badge.urgent { background: #e74c3c; }
+        .badge.normal { background: #95a5a6; }
+        
         .status { font-weight: bold; }
         .btn { display: inline-block; padding: 10px 15px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 20px; }
         .btn:hover { background: #2980b9; }
-        .resolve-btn { background: #2ecc71; padding: 5px 10px; font-size: 12px; margin-top: 10px; }
-        .resolve-btn:hover { background: #27ae60; }
+        
+        .action-btn { display: inline-block; padding: 6px 12px; font-size: 13px; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px; margin-right: 5px; }
+        .btn-progress { background: #f39c12; }
+        .btn-progress:hover { background: #e67e22; }
+        .btn-resolve { background: #2ecc71; }
+        .btn-resolve:hover { background: #27ae60; }
     </style>
 </head>
 <body>
@@ -24,7 +36,7 @@
         <h1>🛠️ Панель заявок</h1>
         <div class="auth-links">
             {% if session.get('logged_in') %}
-                <span style="font-size: 14px; color: #666;">Режим техника</span>
+                <span style="font-size: 14px; color: #666;">Режим администрации</span>
                 <a href="/logout">Выйти</a>
             {% else %}
                 <a href="/login">Вход для администрации</a>
@@ -37,15 +49,30 @@
     
     <div>
         {% for ticket in tickets %}
-            <div class="ticket {{ 'done' if ticket[4] == 'Выполнено' else 'new' }}">
-                <p><strong>Кабинет:</strong> {{ ticket[1] }}</p>
+            <!-- Определяем класс статуса -->
+            {% set status_class = 'new' if ticket[4] == 'Новая' else ('progress' if ticket[4] == 'В работе' else 'done') %}
+            
+            <div class="ticket {{ status_class }}">
+                <p>
+                    <strong>Кабинет:</strong> {{ ticket[1] }} 
+                    <!-- Показываем приоритет -->
+                    {% if ticket[6] == 'Срочная' %}
+                        <span class="badge urgent">🔥 Срочно</span>
+                    {% else %}
+                        <span class="badge normal">Обычная</span>
+                    {% endif %}
+                </p>
                 <p><strong>Проблема:</strong> {{ ticket[2] }}</p>
                 <p><strong>От:</strong> {{ ticket[3] }} | <strong>Время:</strong> {{ ticket[5] }}</p>
                 <p><strong>Статус:</strong> <span class="status">{{ ticket[4] }}</span></p>
                 
-                <!-- Кнопка видна только если вошел техник -->
-                {% if session.get('logged_in') and ticket[4] != 'Выполнено' %}
-                    <a href="/resolve/{{ ticket[0] }}" class="btn resolve-btn">✅ Выполнено</a>
+                {% if session.get('logged_in') %}
+                    {% if ticket[4] == 'Новая' %}
+                        <a href="/progress/{{ ticket[0] }}" class="action-btn btn-progress">⏳ Взять в работу</a>
+                    {% endif %}
+                    {% if ticket[4] != 'Выполнено' %}
+                        <a href="/resolve/{{ ticket[0] }}" class="action-btn btn-resolve">✅ Выполнено</a>
+                    {% endif %}
                 {% endif %}
             </div>
         {% endfor %}
