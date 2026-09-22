@@ -13,12 +13,10 @@ DB_NAME = 'tickets.db'
 ADMIN_PASSWORD = 'admin123'  # Поменяй на свой пароль!
 
 # --- VAPID КЛЮЧИ (ВСТАВЬ СВОИ) ---
-VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy"
+VAPID_PUBLIC_KEY = "BBHfQbXHFrE5HscJ0B0uJJtdmgmHNckT8IYllyMi6m9xvDPjLcjxLwLnofcKuh1CK3yVlFtEnlPdDquT76rYwYc"
 
 VAPID_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
-MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg1Zdpom9N8tzyUWA
-RrDCzC6P8V3ru1LyY+O6ADu0BQRANCAwVgf+etropNQcS8i1/IPNhKHST9Hb
-WD/1S2qa/Kp+tdSJYKdLDF1PrE/YaamsLQhqj1MHFxT3CjmR17FF8W
+tMk1UDwkK44u8hugY1YlgT71ddMnrA5yfwwEpyzuovM
 -----END PRIVATE KEY-----"""
 
 VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}  # Поменяй на свою почту!
