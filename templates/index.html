@@ -5,40 +5,39 @@
     <title>Заявки техников</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; }
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         h1 { color: #333; margin: 0; }
-        .auth-links a { text-decoration: none; color: #3498db; font-size: 14px; margin-left: 15px; }
+        .auth-links { display: flex; align-items: center; gap: 10px; }
+        .auth-links a { text-decoration: none; color: #3498db; font-size: 14px; }
         .auth-links a:hover { text-decoration: underline; }
         .ticket { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        
+
         .ticket.new { border-left: 5px solid #e74c3c; }
         .ticket.progress { border-left: 5px solid #f1c40f; }
         .ticket.done { border-left: 5px solid #2ecc71; opacity: 0.7; }
-        
+
         .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
         .badge.urgent { background: #e74c3c; }
         .badge.normal { background: #95a5a6; }
-        
+
         .status { font-weight: bold; }
         .btn { display: inline-block; padding: 10px 15px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 20px; }
         .btn:hover { background: #2980b9; }
-        
+
         .action-btn { display: inline-block; padding: 6px 12px; font-size: 13px; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px; margin-right: 5px; }
         .btn-progress { background: #f39c12; }
         .btn-progress:hover { background: #e67e22; }
         .btn-resolve { background: #2ecc71; }
         .btn-resolve:hover { background: #27ae60; }
 
-        /* --- Стили для кнопки уведомлений --- */
         #enable-notifications {
             background: #9b59b6;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
-            margin-left: 15px;
+            font-size: 13px;
         }
         #enable-notifications:hover { background: #8e44ad; }
     </style>
@@ -53,20 +52,19 @@
             {% else %}
                 <a href="/login">Вход для администрации</a>
             {% endif %}
-            <!-- Кнопка включения уведомлений -->
             <button id="enable-notifications" style="display:none;">🔔 Включить уведомления</button>
         </div>
     </div>
-    
+
     <br>
     <a href="/add" class="btn">➕ Добавить заявку</a>
-    
+
     <div id="tickets-container">
         {% for ticket in tickets %}
             {% set status_class = 'new' if ticket[4] == 'Новая' else ('progress' if ticket[4] == 'В работе' else 'done') %}
             <div class="ticket {{ status_class }}">
                 <p>
-                    <strong>Кабинет:</strong> {{ ticket[1] }} 
+                    <strong>Кабинет:</strong> {{ ticket[1] }}
                     {% if ticket[6] == 'Срочная' %}
                         <span class="badge urgent">🔥 Срочно</span>
                     {% else %}
@@ -76,7 +74,7 @@
                 <p><strong>Проблема:</strong> {{ ticket[2] }}</p>
                 <p><strong>От:</strong> {{ ticket[3] }} | <strong>Время:</strong> {{ ticket[5] }}</p>
                 <p><strong>Статус:</strong> <span class="status">{{ ticket[4] }}</span></p>
-                
+
                 {% if session.get('logged_in') %}
                     {% if ticket[4] == 'Новая' %}
                         <a href="/progress/{{ ticket[0] }}" class="action-btn btn-progress">⏳ Взять в работу</a>
@@ -89,17 +87,12 @@
         {% endfor %}
     </div>
 
-    <!-- --- СКРИПТ ДЛЯ WEB PUSH --- -->
     <script>
-        // Публичный VAPID ключ, переданный из Flask
         const VAPID_PUBLIC_KEY = "{{ vapid_public_key }}";
 
-        // Функция для конвертации base64 в Uint8Array
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding)
-                .replace(/\-/g, '+')
-                .replace(/_/g, '/');
+            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
             const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
             for (let i = 0; i < rawData.length; ++i) {
@@ -108,27 +101,43 @@
             return outputArray;
         }
 
-        // Проверяем, поддерживает ли браузер Service Worker и Push
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            console.log('Service Worker и Push поддерживаются');
+        function subscribeUser(registration) {
+            registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            })
+            .then(function(subscription) {
+                return fetch('/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subscription)
+                });
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    console.log('Подписка сохранена на сервере');
+                } else {
+                    console.error('Ошибка сохранения подписки');
+                }
+            })
+            .catch(function(error) {
+                console.error('Ошибка при подписке:', error);
+            });
+        }
 
-            // Регистрируем Service Worker
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.register('/static/sw.js')
                 .then(function(registration) {
-                    console.log('Service Worker зарегистрирован:', registration);
-                    
-                    // Проверяем текущий статус разрешений
                     if (Notification.permission === 'granted') {
                         subscribeUser(registration);
                     } else if (Notification.permission !== 'denied') {
-                        // Показываем кнопку только если пользователь еще не дал разрешение
                         const btn = document.getElementById('enable-notifications');
                         btn.style.display = 'inline-block';
                         btn.addEventListener('click', function() {
                             Notification.requestPermission().then(function(permission) {
                                 if (permission === 'granted') {
                                     subscribeUser(registration);
-                                    btn.style.display = 'none'; // Скрываем кнопку после подписки
+                                    btn.style.display = 'none';
                                 }
                             });
                         });
@@ -137,36 +146,6 @@
                 .catch(function(error) {
                     console.error('Ошибка регистрации Service Worker:', error);
                 });
-
-            function subscribeUser(registration) {
-                registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                })
-                .then(function(subscription) {
-                    console.log('Подписка создана:', subscription);
-                    // Отправляем подписку на сервер
-                    return fetch('/subscribe', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(subscription)
-                    });
-                })
-                .then(function(response) {
-                    if (response.ok) {
-                        console.log('Подписка успешно сохранена на сервере');
-                    } else {
-                        console.error('Ошибка сохранения подписки на сервере');
-                    }
-                })
-                .catch(function(error) {
-                    console.error('Ошибка при подписке на Push:', error);
-                });
-            }
-        } else {
-            console.warn('Push-уведомления не поддерживаются в этом браузере.');
         }
     </script>
 </body>
