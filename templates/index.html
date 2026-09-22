@@ -4,179 +4,315 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель заявок</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg: #f4f6fb; --surface: #ffffff; --surface-hover: #f8fafc;
             --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
-            --primary: #3b82f6; --primary-hover: #2563eb;
+            --primary: #6366f1; --primary-hover: #4f46e5;
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
             --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
             --shadow-hover: 0 4px 12px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.06);
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
         }
         [data-theme="dark"] {
-            --bg: #0f172a; --surface: #1e293b; --surface-hover: #273449;
-            --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
-            --primary: #3b82f6; --primary-hover: #60a5fa;
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
-            --shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+            --bg: #0a0f1e; --surface: #151b2e; --surface-hover: #1e2540;
+            --text: #f1f5f9; --text-muted: #94a3b8; --border: #2a3350;
+            --primary: #818cf8; --primary-hover: #a5b4fc;
+            --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-hover: 0 4px 12px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.4);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg); color: var(--text);
-            min-height: 100vh; padding: 24px;
+            min-height: 100vh; padding: 24px 20px;
             transition: background 0.3s ease, color 0.3s ease;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(99,102,241,0.08), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(236,72,153,0.06), transparent 40%);
+            background-attachment: fixed;
         }
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 960px; margin: 0 auto; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-        h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
+        /* HEADER */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 28px; flex-wrap: wrap; gap: 14px;
+        }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            background: var(--gradient);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+            transform: rotate(-3deg); transition: transform 0.3s ease;
+        }
+        .logo-icon:hover { transform: rotate(3deg) scale(1.05); }
+        .logo-text h1 {
+            font-size: 22px; font-weight: 800; letter-spacing: -0.03em;
+            background: var(--gradient); -webkit-background-clip: text;
+            background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-text p { font-size: 12px; color: var(--text-muted); font-weight: 500; }
         .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
+        .clock {
+            font-variant-numeric: tabular-nums; font-weight: 600;
+            font-size: 14px; padding: 8px 14px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 10px;
+            color: var(--text-muted);
+        }
         .btn {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 10px 16px; background: var(--primary); color: #fff;
             text-decoration: none; border-radius: 10px; font-size: 14px;
-            font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease;
-            font-family: inherit;
+            font-weight: 500; border: none; cursor: pointer;
+            transition: all 0.2s ease; font-family: inherit;
         }
-        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
-        .btn-ghost:hover { background: var(--surface); color: var(--text); }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+        .btn-ghost { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--surface-hover); color: var(--text); box-shadow: none; }
         .icon-btn {
             width: 40px; height: 40px; display: inline-flex; align-items: center;
             justify-content: center; background: var(--surface);
             border: 1px solid var(--border); border-radius: 10px;
             cursor: pointer; font-size: 18px; transition: all 0.2s ease; color: var(--text);
         }
-        .icon-btn:hover { background: var(--surface-hover); transform: translateY(-1px); }
+        .icon-btn:hover { background: var(--surface-hover); transform: translateY(-1px) rotate(15deg); }
 
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        /* STATS */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
         .stat-card {
             background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px; box-shadow: var(--shadow);
-            transition: all 0.3s ease; cursor: pointer;
+            border-radius: 14px; padding: 18px 20px; box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+            position: relative; overflow: hidden;
         }
-        .stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
-        .stat-card.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
-        .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-        .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .stat-card::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--border); transition: background 0.3s ease;
+        }
+        .stat-card[data-filter="all"]::after { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+        .stat-card[data-filter="Новая"]::after { background: linear-gradient(90deg, #ef4444, #f97316); }
+        .stat-card[data-filter="В работе"]::after { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .stat-card[data-filter="Выполнено"]::after { background: linear-gradient(90deg, #10b981, #34d399); }
+        .stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+        .stat-card.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15), var(--shadow); }
+        .stat-value { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+        .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-weight: 500; }
         .stat-new .stat-value { color: var(--danger); }
         .stat-progress .stat-value { color: var(--warning); }
         .stat-done .stat-value { color: var(--success); }
         .stat-total .stat-value { color: var(--primary); }
 
+        /* CHART */
+        .chart-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px; box-shadow: var(--shadow);
+            margin-bottom: 22px; display: flex; align-items: center; gap: 24px;
+            flex-wrap: wrap;
+        }
+        .chart-wrap { width: 160px; height: 160px; position: relative; flex-shrink: 0; }
+        .chart-info { flex: 1; min-width: 200px; }
+        .chart-info h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+        .legend { display: flex; flex-direction: column; gap: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 4px; }
+        .legend-value { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+        /* FILTERS */
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .add-btn {
+            background: var(--gradient); color: #fff; padding: 11px 20px;
+            font-weight: 600; box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+            margin-left: auto;
+        }
+        .add-btn:hover { box-shadow: 0 6px 18px rgba(99,102,241,0.5); }
+
+        /* TICKETS */
         .ticket {
             background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;
-            box-shadow: var(--shadow); transition: all 0.25s ease;
-            animation: slideIn 0.3s ease;
+            border-radius: 14px; padding: 18px 20px 16px;
+            margin-bottom: 12px; box-shadow: var(--shadow);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
         }
-        .ticket:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
-        .ticket.overdue { border-left: 4px solid var(--danger); }
+        .ticket::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+            background: var(--border);
+        }
+        .ticket.status-new::before { background: linear-gradient(180deg, #ef4444, #f97316); }
+        .ticket.status-progress::before { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
+        .ticket.status-done::before { background: linear-gradient(180deg, #10b981, #34d399); opacity: 0.6; }
+        .ticket:hover { box-shadow: var(--shadow-hover); transform: translateX(3px); }
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .ticket-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-        .ticket-room { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .ticket-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .ticket-room { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+        .ticket-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
         .ticket-meta .overdue-text { color: var(--danger); font-weight: 600; }
-        .ticket-issue { font-size: 15px; line-height: 1.5; margin-bottom: 10px; }
+        .ticket-issue { font-size: 15px; line-height: 1.55; margin-bottom: 12px; }
         .ticket-comment {
-            background: rgba(59,130,246,0.08); border-left: 3px solid var(--primary);
-            padding: 8px 12px; border-radius: 6px; font-size: 14px;
-            color: var(--text); margin-bottom: 10px;
+            background: linear-gradient(90deg, rgba(99,102,241,0.1), rgba(139,92,246,0.05));
+            border-left: 3px solid var(--primary);
+            padding: 10px 14px; border-radius: 8px; font-size: 14px;
+            color: var(--text); margin-bottom: 12px;
         }
-        .ticket-comment-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+        .ticket-comment-label { font-size: 12px; color: var(--primary); font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
         .ticket-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-        .badge-urgent { background: rgba(239,68,68,0.15); color: var(--danger); }
-        .badge-normal { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+        .badge-urgent { background: rgba(239,68,68,0.15); color: var(--danger); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
         .badge-new { background: rgba(239,68,68,0.15); color: var(--danger); }
         .badge-progress { background: rgba(245,158,11,0.15); color: var(--warning); }
         .badge-done { background: rgba(16,185,129,0.15); color: var(--success); }
+        .badge-admin { background: rgba(99,102,241,0.15); color: var(--primary); }
+        .category-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 20px; font-size: 12px;
+            font-weight: 600; color: #fff;
+        }
 
         .action-btn {
             display: inline-flex; align-items: center; gap: 5px;
-            padding: 7px 14px; font-size: 13px; font-weight: 500;
-            border-radius: 8px; text-decoration: none; border: none;
+            padding: 8px 14px; font-size: 13px; font-weight: 600;
+            border-radius: 9px; text-decoration: none; border: none;
             cursor: pointer; transition: all 0.2s ease; color: #fff;
             font-family: inherit;
         }
-        .btn-progress { background: var(--warning); }
-        .btn-progress:hover { filter: brightness(0.92); transform: translateY(-1px); }
-        .btn-resolve { background: var(--success); }
-        .btn-resolve:hover { filter: brightness(0.92); transform: translateY(-1px); }
-        .btn-delete { background: var(--danger); }
-        .btn-delete:hover { filter: brightness(0.92); transform: translateY(-1px); }
+        .btn-progress { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .btn-progress:hover { filter: brightness(0.92); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(245,158,11,0.4); }
+        .btn-resolve { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-resolve:hover { filter: brightness(0.92); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(16,185,129,0.4); }
+        .btn-delete { background: transparent; color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+        .btn-delete:hover { background: rgba(239,68,68,0.1); border-color: var(--danger); }
 
-        .comment-form { display: flex; gap: 6px; margin-top: 8px; }
+        .comment-form { display: flex; gap: 6px; margin-top: 10px; }
         .comment-form input {
-            flex: 1; padding: 8px 12px; border: 1px solid var(--border);
-            border-radius: 8px; background: var(--bg); color: var(--text);
+            flex: 1; padding: 9px 14px; border: 1px solid var(--border);
+            border-radius: 9px; background: var(--bg); color: var(--text);
             font-family: inherit; font-size: 13px;
         }
-        .comment-form input:focus { outline: none; border-color: var(--primary); }
+        .comment-form input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
         .comment-form button {
-            padding: 8px 14px; background: var(--primary); color: #fff;
-            border: none; border-radius: 8px; cursor: pointer;
-            font-size: 13px; font-weight: 500; font-family: inherit;
+            padding: 9px 16px; background: var(--primary); color: #fff;
+            border: none; border-radius: 9px; cursor: pointer;
+            font-size: 13px; font-weight: 600; font-family: inherit;
+            transition: all 0.2s ease;
         }
         .comment-form button:hover { background: var(--primary-hover); }
 
-        .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-        .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
-        .empty-text { font-size: 15px; }
+        .empty { text-align: center; padding: 70px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.4; display: block; }
+        .empty-text { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .empty-sub { font-size: 14px; }
+
+        @media (max-width: 600px) {
+            .chart-card { flex-direction: column; }
+            .chart-info { width: 100%; }
+            .header-controls { width: 100%; }
+            .add-btn { margin-left: 0; width: 100%; justify-content: center; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🛠️ Панель заявок</h1>
+        <div class="top-bar">
+            <div class="logo">
+                <div class="logo-icon">🛠️</div>
+                <div class="logo-text">
+                    <h1>Панель заявок</h1>
+                    <p>Школьная техподдержка</p>
+                </div>
+            </div>
             <div class="header-controls">
+                <div class="clock" id="clock">--:--</div>
                 <button class="icon-btn" id="theme-toggle" title="Переключить тему">🌙</button>
                 {% if session.get('logged_in') %}
-                    <span class="badge badge-done">Режим администрации</span>
+                    <span class="badge badge-admin">👤 Администрация</span>
                     <a href="/logout" class="btn btn-ghost">Выйти</a>
                 {% else %}
-                    <a href="/login" class="btn btn-ghost">Вход для администрации</a>
+                    <a href="/login" class="btn btn-ghost">Вход</a>
                 {% endif %}
-                <button id="enable-notifications" class="btn btn-ghost" style="display:none;">🔔 Уведомления</button>
+                <button id="enable-notifications" class="btn btn-ghost" style="display:none;">🔔</button>
             </div>
         </div>
 
         <div class="stats">
             <div class="stat-card stat-total active" data-filter="all">
                 <div class="stat-value" id="stat-total">0</div>
-                <div class="stat-label">Всего</div>
+                <div class="stat-label">Всего заявок</div>
             </div>
             <div class="stat-card stat-new" data-filter="Новая">
                 <div class="stat-value" id="stat-new">0</div>
-                <div class="stat-label">Новые</div>
+                <div class="stat-label">🆕 Новые</div>
             </div>
             <div class="stat-card stat-progress" data-filter="В работе">
                 <div class="stat-value" id="stat-progress">0</div>
-                <div class="stat-label">В работе</div>
+                <div class="stat-label">⏳ В работе</div>
             </div>
             <div class="stat-card stat-done" data-filter="Выполнено">
                 <div class="stat-value" id="stat-done">0</div>
-                <div class="stat-label">Выполнено</div>
+                <div class="stat-label">✅ Выполнено</div>
             </div>
         </div>
 
-        <a href="/add" class="btn" style="margin-bottom: 20px;">➕ Добавить заявку</a>
+        <div class="chart-card">
+            <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+            <div class="chart-info">
+                <h3>📊 Общая картина</h3>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#ef4444"></div>
+                        <span>Новые</span>
+                        <span class="legend-value" id="legend-new">0</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#f59e0b"></div>
+                        <span>В работе</span>
+                        <span class="legend-value" id="legend-progress">0</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#10b981"></div>
+                        <span>Выполнено</span>
+                        <span class="legend-value" id="legend-done">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <a href="/add" class="btn add-btn">➕ Добавить заявку</a>
+        </div>
 
         <div id="tickets-container"></div>
     </div>
 
     <script>
-        // --- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ---
+        // --- ЧАСЫ ---
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${h}:${m}`;
+        }
+        updateClock();
+        setInterval(updateClock, 30000);
+
+        // --- ТЕМА ---
         const themeToggle = document.getElementById('theme-toggle');
         const currentTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', currentTheme);
@@ -199,17 +335,42 @@
             });
         });
 
+        // --- АНИМИРОВАННЫЕ СЧЁТЧИКИ ---
+        function animateNumber(el, target) {
+            const current = parseInt(el.textContent) || 0;
+            if (current === target) return;
+            const diff = target - current;
+            const steps = Math.min(Math.abs(diff), 20);
+            const stepValue = diff / steps;
+            let i = 0;
+            const timer = setInterval(() => {
+                i++;
+                el.textContent = Math.round(current + stepValue * i);
+                if (i >= steps) { el.textContent = target; clearInterval(timer); }
+            }, 25);
+        }
+
         // --- АВТООБНОВЛЕНИЕ ---
         const ticketsContainer = document.getElementById('tickets-container');
         const isLoggedIn = {{ 'true' if session.get('logged_in') else 'false' }};
         let lastDataHash = '';
         let lastTickets = [];
+        let chartInstance = null;
 
         function escapeHtml(str) {
             if (!str) return '';
             const div = document.createElement('div');
             div.textContent = str;
             return div.innerHTML;
+        }
+
+        function categoryColor(cat) {
+            if (!cat) return '#64748b';
+            if (cat.includes('Принтер')) return 'linear-gradient(135deg, #8b5cf6, #a78bfa)';
+            if (cat.includes('Компьютер')) return 'linear-gradient(135deg, #3b82f6, #60a5fa)';
+            if (cat.includes('Интернет')) return 'linear-gradient(135deg, #06b6d4, #22d3ee)';
+            if (cat.includes('Проектор')) return 'linear-gradient(135deg, #ec4899, #f472b6)';
+            return 'linear-gradient(135deg, #64748b, #94a3b8)';
         }
 
         function timeAgo(dateStr) {
@@ -241,14 +402,15 @@
             } catch (e) { return false; }
         }
 
-        function renderTicket(t) {
-            let statusBadge, statusIcon;
-            if (t.status === 'Новая') { statusBadge = 'badge-new'; statusIcon = '🆕'; }
-            else if (t.status === 'В работе') { statusBadge = 'badge-progress'; statusIcon = '⏳'; }
-            else { statusBadge = 'badge-done'; statusIcon = '✅'; }
+        function renderTicket(t, index) {
+            let statusClass, statusBadge, statusIcon;
+            if (t.status === 'Новая') { statusClass = 'status-new'; statusBadge = 'badge-new'; statusIcon = '🆕'; }
+            else if (t.status === 'В работе') { statusClass = 'status-progress'; statusBadge = 'badge-progress'; statusIcon = '⏳'; }
+            else { statusClass = 'status-done'; statusBadge = 'badge-done'; statusIcon = '✅'; }
 
             const overdue = t.status !== 'Выполнено' && isOverdue(t.created_at);
             const timeClass = overdue ? 'overdue-text' : '';
+            const isUrgent = t.priority === 'Срочная';
 
             let actionsHtml = '';
             if (isLoggedIn) {
@@ -261,12 +423,10 @@
                 actionsHtml += `<a href="/delete/${t.id}" class="action-btn btn-delete" onclick="return confirm('Удалить заявку №${t.id}?')">🗑️ Удалить</a>`;
             }
 
-            const priorityHtml = t.priority === 'Срочная'
-                ? '<span class="badge badge-urgent">🔥 Срочно</span>'
-                : '';
+            const priorityHtml = isUrgent ? '<span class="badge badge-urgent">🔥 Срочно</span>' : '';
 
             const commentHtml = t.comment
-                ? `<div class="ticket-comment"><div class="ticket-comment-label">💬 Комментарий администрации:</div>${escapeHtml(t.comment)}</div>`
+                ? `<div class="ticket-comment"><div class="ticket-comment-label">💬 Комментарий администрации</div>${escapeHtml(t.comment)}</div>`
                 : '';
 
             let commentFormHtml = '';
@@ -278,16 +438,18 @@
                     </form>`;
             }
 
+            const catPill = `<span class="category-pill" style="background:${categoryColor(t.category)}">${escapeHtml(t.category)}</span>`;
+
             return `
-                <div class="ticket ${overdue ? 'overdue' : ''}">
+                <div class="ticket ${statusClass}" style="animation-delay: ${index * 0.05}s">
                     <div class="ticket-header">
                         <div class="ticket-room">🚪 Кабинет ${escapeHtml(t.room)}</div>
                         <span class="badge ${statusBadge}">${statusIcon} ${t.status}</span>
                     </div>
                     <div class="ticket-meta">
-                        <span>${escapeHtml(t.category)}</span> ·
+                        ${catPill}
                         ${priorityHtml}
-                        <span>👤 ${escapeHtml(t.author)}</span> ·
+                        <span>👤 ${escapeHtml(t.author)}</span>
                         <span class="${timeClass}">🕐 ${timeAgo(t.created_at)}</span>
                     </div>
                     <div class="ticket-issue">${escapeHtml(t.issue)}</div>
@@ -301,28 +463,70 @@
         function renderTickets(tickets) {
             lastTickets = tickets;
             let filtered = tickets;
-            if (currentFilter !== 'all') {
-                filtered = tickets.filter(t => t.status === currentFilter);
-            }
+            if (currentFilter !== 'all') filtered = tickets.filter(t => t.status === currentFilter);
             if (!filtered.length) {
                 const msg = currentFilter === 'all'
-                    ? 'Заявок пока нет. Всё работает!'
-                    : 'В этой категории заявок нет.';
+                    ? { title: 'Заявок пока нет', sub: 'Всё работает — можно выдохнуть!' }
+                    : { title: 'Здесь пусто', sub: 'В этой категории заявок пока нет.' };
                 ticketsContainer.innerHTML = `
                     <div class="empty">
-                        <div class="empty-icon">📭</div>
-                        <div class="empty-text">${msg}</div>
+                        <span class="empty-icon">${currentFilter === 'all' ? '✨' : '📭'}</span>
+                        <div class="empty-text">${msg.title}</div>
+                        <div class="empty-sub">${msg.sub}</div>
                     </div>`;
                 return;
             }
-            ticketsContainer.innerHTML = filtered.map(renderTicket).join('');
+            ticketsContainer.innerHTML = filtered.map((t, i) => renderTicket(t, i)).join('');
         }
 
         function updateStats(tickets) {
-            document.getElementById('stat-total').textContent = tickets.length;
-            document.getElementById('stat-new').textContent = tickets.filter(t => t.status === 'Новая').length;
-            document.getElementById('stat-progress').textContent = tickets.filter(t => t.status === 'В работе').length;
-            document.getElementById('stat-done').textContent = tickets.filter(t => t.status === 'Выполнено').length;
+            const total = tickets.length;
+            const newCount = tickets.filter(t => t.status === 'Новая').length;
+            const progressCount = tickets.filter(t => t.status === 'В работе').length;
+            const doneCount = tickets.filter(t => t.status === 'Выполнено').length;
+
+            animateNumber(document.getElementById('stat-total'), total);
+            animateNumber(document.getElementById('stat-new'), newCount);
+            animateNumber(document.getElementById('stat-progress'), progressCount);
+            animateNumber(document.getElementById('stat-done'), doneCount);
+
+            document.getElementById('legend-new').textContent = newCount;
+            document.getElementById('legend-progress').textContent = progressCount;
+            document.getElementById('legend-done').textContent = doneCount;
+
+            updateChart(newCount, progressCount, doneCount);
+        }
+
+        function updateChart(n, p, d) {
+            const ctx = document.getElementById('statusChart');
+            if (!ctx || typeof Chart === 'undefined') return;
+            const data = [n, p, d];
+            const hasData = n + p + d > 0;
+            if (!chartInstance) {
+                chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Новые', 'В работе', 'Выполнено'],
+                        datasets: [{
+                            data: hasData ? data : [1],
+                            backgroundColor: hasData ? ['#ef4444', '#f59e0b', '#10b981'] : ['#e2e8f0'],
+                            borderWidth: 0,
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        cutout: '68%',
+                        plugins: { legend: { display: false }, tooltip: { enabled: hasData } },
+                        animation: { duration: 600, easing: 'easeOutQuart' }
+                    }
+                });
+            } else {
+                chartInstance.data.datasets[0].data = hasData ? data : [1];
+                chartInstance.data.datasets[0].backgroundColor = hasData ? ['#ef4444', '#f59e0b', '#10b981'] : ['#e2e8f0'];
+                chartInstance.update();
+            }
         }
 
         async function fetchTickets() {
@@ -336,9 +540,7 @@
                     renderTickets(tickets);
                     updateStats(tickets);
                 }
-            } catch (e) {
-                console.error('Ошибка автообновления:', e);
-            }
+            } catch (e) { console.error('Ошибка автообновления:', e); }
         }
 
         fetchTickets();
@@ -346,7 +548,6 @@
 
         // --- WEB PUSH ---
         const VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy";
-
         function urlBase64ToUint8Array(base64String) {
             const cleanedString = base64String.replace(/[^A-Za-z0-9\-_]/g, '');
             const padding = '='.repeat((4 - cleanedString.length % 4) % 4);
@@ -356,7 +557,6 @@
             for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
             return outputArray;
         }
-
         function subscribeUser(registration) {
             registration.pushManager.subscribe({
                 userVisibleOnly: true,
@@ -367,32 +567,24 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(subscription)
             }))
-            .then(response => {
-                if (response.ok) console.log('Подписка сохранена');
-                else console.error('Ошибка сохранения');
-            })
-            .catch(error => console.error('Ошибка при подписке:', error));
+            .then(r => r.ok ? console.log('Подписка сохранена') : console.error('Ошибка'))
+            .catch(e => console.error('Ошибка при подписке:', e));
         }
-
         if ('serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.register('/sw.js')
                 .then(registration => {
-                    if (Notification.permission === 'granted') {
-                        subscribeUser(registration);
-                    } else if (Notification.permission !== 'denied') {
+                    if (Notification.permission === 'granted') subscribeUser(registration);
+                    else if (Notification.permission !== 'denied') {
                         const btn = document.getElementById('enable-notifications');
                         btn.style.display = 'inline-flex';
                         btn.addEventListener('click', function() {
-                            Notification.requestPermission().then(permission => {
-                                if (permission === 'granted') {
-                                    subscribeUser(registration);
-                                    btn.style.display = 'none';
-                                }
+                            Notification.requestPermission().then(p => {
+                                if (p === 'granted') { subscribeUser(registration); btn.style.display = 'none'; }
                             });
                         });
                     }
                 })
-                .catch(error => console.error('Ошибка регистрации SW:', error));
+                .catch(e => console.error('Ошибка регистрации SW:', e));
         }
     </script>
 </body>
