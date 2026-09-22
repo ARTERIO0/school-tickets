@@ -187,7 +187,20 @@ def subscribe():
         conn.close()
         return jsonify({"status": "error", "message": str(e)}), 500
 
-
+@app.route('/api/tickets')
+def api_tickets():
+    """Возвращает список заявок в JSON для автообновления."""
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""SELECT id, room, issue, author, status, created_at, priority 
+                 FROM tickets 
+                 ORDER BY CASE WHEN priority = 'Срочная' THEN 0 ELSE 1 END, id DESC""")
+    tickets = c.fetchall()
+    conn.close()
+    return jsonify([{
+        'id': t[0], 'room': t[1], 'issue': t[2], 'author': t[3],
+        'status': t[4], 'created_at': t[5], 'priority': t[6]
+    } for t in tickets])
 init_db()
 @app.route('/sw.js')
 def service_worker():
