@@ -10,9 +10,9 @@ app = Flask(__name__)
 app.secret_key = 'school_tickets_secret_key_12345'
 
 # --- НАСТРОЙКА БАЗЫ ДАННЫХ ---
-# Render автоматически передаст DATABASE_URL в переменные окружения
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///tickets.db')
-# Render иногда отдаёт URL в формате postgres://, а SQLAlchemy требует postgresql://
+if DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 if DATABASE_URL.startswith('postgresql://'):
     DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
 
@@ -23,12 +23,15 @@ db = SQLAlchemy(app)
 ADMIN_PASSWORD = 'admin123'  # Поменяй на свой пароль!
 
 VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy"
+
 VAPID_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
 MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg1Zdpom9N8tzyUWA
 RrDCzC6P8V3ru1LyY+O6ADu0BQRANCAwVgf+etropNQcS8i1/IPNhKHST9Hb
 WD/1S2qa/Kp+tdSJYKdLDF1PrE/YaamsLQhqj1MHFxT3CjmR17FF8W
 -----END PRIVATE KEY-----"""
+
 VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}
+
 
 # --- МОДЕЛИ БАЗЫ ДАННЫХ ---
 class Ticket(db.Model):
@@ -42,15 +45,18 @@ class Ticket(db.Model):
     category = db.Column(db.String(50), default='📝 Другое')
     comment = db.Column(db.Text)
 
+
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     endpoint = db.Column(db.Text, unique=True, nullable=False)
     p256dh = db.Column(db.Text, nullable=False)
     auth = db.Column(db.Text, nullable=False)
 
+
 @app.route('/sw.js')
 def service_worker():
     return send_from_directory('static', 'sw.js', mimetype='application/javascript')
+
 
 def login_required(f):
     @wraps(f)
@@ -60,19 +66,23 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 def send_push_notification(title, body):
     subs = Subscription.query.all()
     for sub in subs:
         sub_info = {"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}}
         try:
-            webpush(subscription_info=sub_info,
-                    data=json.dumps({"title": title, "body": body}),
-                    vapid_private_key=VAPID_PRIVATE_KEY,
-                    vapid_claims=VAPID_CLAIMS)
+            webpush(
+                subscription_info=sub_info,
+                data=json.dumps({"title": title, "body": body}),
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=VAPID_CLAIMS
+            )
         except WebPushException as e:
             if e.response and e.response.status_code in [404, 410]:
                 db.session.delete(sub)
                 db.session.commit()
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -85,22 +95,26 @@ def login():
             error = 'Неверный пароль'
     return render_template('login.html', error=error)
 
+
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('index'))
 
+
 @app.route('/')
 def index():
     tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
     return render_template('index.html', tickets=tickets, vapid_public_key=VAPID_PUBLIC_KEY)
-    
+
+
 @app.route('/report')
 def report():
     tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
     return render_template('report.html', tickets=tickets, now=now)
-    
+
+
 @app.route('/api/tickets')
 def api_tickets():
     tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
@@ -109,6 +123,7 @@ def api_tickets():
         'status': t.status, 'created_at': t.created_at.isoformat(),
         'priority': t.priority, 'category': t.category, 'comment': t.comment
     } for t in tickets])
+
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
@@ -121,10 +136,14 @@ def add():
         ticket = Ticket(room=room, issue=issue, author=author, priority=priority, category=category)
         db.session.add(ticket)
         db.session.commit()
-        send_push_notification(title=f"Новая заявка: каб. {room}",
-                               body=f"{category}: {issue[:40]}{'...' if len(issue) > 40 else ''}")
-        return redirect(url_for('index'))
+
+        send_push_notification(
+            title=f"Новая заявка: каб. {room}",
+            body=f"{category}: {issue[:40]}{'...' if len(issue) > 40 else ''}"
+        )
+        return redirect(url_for('index') + '?toast=created')
     return render_template('add.html')
+
 
 @app.route('/progress/<int:ticket_id>')
 @login_required
@@ -132,7 +151,8 @@ def progress(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     ticket.status = 'В работе'
     db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('index') + '?toast=progress')
+
 
 @app.route('/resolve/<int:ticket_id>')
 @login_required
@@ -140,7 +160,8 @@ def resolve(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     ticket.status = 'Выполнено'
     db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('index') + '?toast=resolved')
+
 
 @app.route('/delete/<int:ticket_id>')
 @login_required
@@ -148,7 +169,8 @@ def delete_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     db.session.delete(ticket)
     db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('index') + '?toast=deleted')
+
 
 @app.route('/comment/<int:ticket_id>', methods=['POST'])
 @login_required
@@ -156,15 +178,18 @@ def add_comment(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     ticket.comment = request.form.get('comment', '').strip()
     db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('index') + '?toast=commented')
+
 
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     data = request.get_json()
-    if not data: return jsonify({"status": "error"}), 400
+    if not data:
+        return jsonify({"status": "error"}), 400
     endpoint, keys = data.get('endpoint'), data.get('keys', {})
     p256dh, auth = keys.get('p256dh'), keys.get('auth')
-    if not all([endpoint, p256dh, auth]): return jsonify({"status": "error"}), 400
+    if not all([endpoint, p256dh, auth]):
+        return jsonify({"status": "error"}), 400
     sub = Subscription.query.filter_by(endpoint=endpoint).first()
     if sub:
         sub.p256dh, sub.auth = p256dh, auth
@@ -174,7 +199,7 @@ def subscribe():
     db.session.commit()
     return jsonify({"status": "ok"})
 
-# Создание таблиц при первом запуске
+
 with app.app_context():
     db.create_all()
 
