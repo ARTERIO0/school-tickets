@@ -67,20 +67,27 @@ def login_required(f):
 
 
 def send_push_notification(title, body):
-    subs = Subscription.query.all()
-    for sub in subs:
-        sub_info = {"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}}
-        try:
-            webpush(
-                subscription_info=sub_info,
-                data=json.dumps({"title": title, "body": body}),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims=VAPID_CLAIMS
-            )
-        except WebPushException as e:
-            if e.response and e.response.status_code in [404, 410]:
-                db.session.delete(sub)
-                db.session.commit()
+    try:
+        subs = Subscription.query.all()
+        for sub in subs:
+            sub_info = {"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}}
+            try:
+                webpush(
+                    subscription_info=sub_info,
+                    data=json.dumps({"title": title, "body": body}),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+            except WebPushException as e:
+                print(f"WebPush ошибка для {sub.endpoint[:30]}: {e}")
+                if e.response and e.response.status_code in [404, 410]:
+                    db.session.delete(sub)
+                    db.session.commit()
+            except Exception as e:
+                print(f"Неизвестная ошибка push: {e}")
+    except Exception as e:
+        # Самое главное: push не должен ломать создание заявки!
+        print(f"Критическая ошибка в send_push_notification: {e}")
 
 
 @app.route('/login', methods=['GET', 'POST'])
