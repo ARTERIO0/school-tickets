@@ -22,17 +22,11 @@ db = SQLAlchemy(app)
 
 ADMIN_PASSWORD = 'admin123'  # Поменяй на свой пароль!
 
-import base64
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import serialization
+# Приватный ключ берём из переменной окружения Render
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '').replace('\\n', '\n')
 
-# --- VAPID КЛЮЧИ (однострочные из keys_single.txt) ---
-# Приватный ключ (43 символа, первая строка из файла)
-_PRIVATE_B64 = "3JO-aZo9yPNOsZVAKfrkikyR6Y7Jee5BLdaOBtSFLTc"
-
-# Публичный ключ (87 символов, вторая строка из файла)
+# Публичный ключ (вторую строку из keys_single.txt — она должна быть 87 символов)
 VAPID_PUBLIC_KEY = "BF15spp6EaAC90TLyIw9zN_vAfXBHcz5Tq78QmUxn4PCgN74fNSGnU1ubQFsSx8S5hwEGGJ6wNdIXKKlso73WA0"
-
 def _b64d(s):
     return base64.urlsafe_b64decode(s + '=' * (-len(s) % 4))
 
