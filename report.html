@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт по заявкам</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+            padding: 30px; color: #1e293b; background: #fff;
+        }
+        .report-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 2px solid #1e293b; padding-bottom: 16px; margin-bottom: 24px;
+            flex-wrap: wrap; gap: 12px;
+        }
+        h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .subtitle { font-size: 13px; color: #64748b; }
+        .summary { display: flex; gap: 24px; flex-wrap: wrap; }
+        .summary-item { text-align: right; }
+        .summary-value { font-size: 22px; font-weight: 700; }
+        .summary-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .summary-new .summary-value { color: #ef4444; }
+        .summary-progress .summary-value { color: #f59e0b; }
+        .summary-done .summary-value { color: #10b981; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: #f1f5f9; }
+        th {
+            text-align: left; padding: 10px 12px; font-weight: 700;
+            font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+            color: #475569; border-bottom: 2px solid #cbd5e1;
+        }
+        td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        tr:nth-child(even) { background: #f8fafc; }
+        .status-pill {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 11px; font-weight: 600;
+        }
+        .status-new { background: #fee2e2; color: #991b1b; }
+        .status-progress { background: #fef3c7; color: #92400e; }
+        .status-done { background: #d1fae5; color: #065f46; }
+        .urgent-badge { color: #ef4444; font-weight: 700; font-size: 11px; }
+
+        .print-btn {
+            position: fixed; top: 20px; right: 20px;
+            padding: 12px 20px; background: #6366f1; color: #fff;
+            border: none; border-radius: 10px; font-size: 14px;
+            font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+            transition: all 0.2s ease; font-family: inherit;
+        }
+        .print-btn:hover { background: #4f46e5; transform: translateY(-2px); }
+
+        .footer {
+            margin-top: 30px; padding-top: 16px; border-top: 1px solid #e2e8f0;
+            font-size: 12px; color: #94a3b8; text-align: center;
+        }
+        .empty { text-align: center; padding: 40px; color: #94a3b8; }
+
+        @media print {
+            .print-btn { display: none; }
+            body { padding: 10px; font-size: 11px; }
+            thead { background: #e2e8f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tr { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ Печать / Сохранить PDF</button>
+
+    <div class="report-header">
+        <div>
+            <h1>📋 Отчёт по заявкам</h1>
+            <div class="subtitle">Школьная техподдержка · Сформирован {{ now }}</div>
+        </div>
+        <div class="summary">
+            <div class="summary-item">
+                <div class="summary-value">{{ tickets|length }}</div>
+                <div class="summary-label">Всего</div>
+            </div>
+            <div class="summary-item summary-new">
+                <div class="summary-value">{{ tickets|selectattr('status', 'equalto', 'Новая')|list|length }}</div>
+                <div class="summary-label">Новых</div>
+            </div>
+            <div class="summary-item summary-progress">
+                <div class="summary-value">{{ tickets|selectattr('status', 'equalto', 'В работе')|list|length }}</div>
+                <div class="summary-label">В работе</div>
+            </div>
+            <div class="summary-item summary-done">
+                <div class="summary-value">{{ tickets|selectattr('status', 'equalto', 'Выполнено')|list|length }}</div>
+                <div class="summary-label">Выполнено</div>
+            </div>
+        </div>
+    </div>
+
+    {% if tickets %}
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 40px;">№</th>
+                <th style="width: 70px;">Кабинет</th>
+                <th style="width: 130px;">Категория</th>
+                <th>Проблема</th>
+                <th style="width: 120px;">Автор</th>
+                <th style="width: 110px;">Создана</th>
+                <th style="width: 100px;">Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tickets %}
+            <tr>
+                <td>{{ t.id }}</td>
+                <td><strong>{{ t.room }}</strong></td>
+                <td>{{ t.category }}</td>
+                <td>
+                    {% if t.priority == 'Срочная' %}<span class="urgent-badge">🔥 СРОЧНО</span><br>{% endif %}
+                    {{ t.issue }}
+                    {% if t.comment %}<br><em style="color:#64748b;font-size:11px;">💬 {{ t.comment }}</em>{% endif %}
+                </td>
+                <td>{{ t.author }}</td>
+                <td>{{ t.created_at.strftime('%d.%m.%Y') }}<br><span style="color:#94a3b8;font-size:11px;">{{ t.created_at.strftime('%H:%M') }}</span></td>
+                <td>
+                    {% if t.status == 'Новая' %}<span class="status-pill status-new">🆕 Новая</span>
+                    {% elif t.status == 'В работе' %}<span class="status-pill status-progress">⏳ В работе</span>
+                    {% else %}<span class="status-pill status-done">✅ Выполнено</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">Заявок нет</div>
+    {% endif %}
+
+    <div class="footer">
+        Сформировано автоматически · Панель заявок школьной техподдержки
+    </div>
+</body>
+</html>
