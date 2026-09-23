@@ -94,7 +94,13 @@ def logout():
 def index():
     tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
     return render_template('index.html', tickets=tickets, vapid_public_key=VAPID_PUBLIC_KEY)
-
+    
+@app.route('/report')
+def report():
+    tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
+    now = datetime.now().strftime("%d.%m.%Y %H:%M")
+    return render_template('report.html', tickets=tickets, now=now)
+    
 @app.route('/api/tickets')
 def api_tickets():
     tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
