@@ -24,11 +24,9 @@ ADMIN_PASSWORD = 'admin123'  # Поменяй на свой пароль!
 
 VAPID_PUBLIC_KEY = "BOOk-J5TstzjT2OUNrELa7ka1FNcHq4o7WKESG7E-SVTVzd5j_PxrP16p6oHvOBsLrILMyxWXsAz8pPn3sA_cuM"
 
-VAPID_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
-MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgC73bi4J3aPnSmsV2
-N5gN0edw6v8a8XwFskI/rmBQaIKhRANCAATjpPieU7Lc409jlDaxC2u5GtRTXB6u
-KO1ihEhuxPklU1c3eY/z8az9eqeqB7zgbC6yCzMsVl7AM/KT597AP3Lj
------END PRIVATE KEY-----"""
+# Читаем приватный ключ из файла, чтобы не мучиться с копированием
+with open('private_key.pem', 'r') as f:
+    VAPID_PRIVATE_KEY = f.read()
 
 VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}
 
