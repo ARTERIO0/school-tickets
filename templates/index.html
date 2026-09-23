@@ -131,12 +131,51 @@
 
         /* FILTERS */
         .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .search-input {
+            flex: 1; min-width: 200px; padding: 11px 16px;
+            border: 1px solid var(--border); border-radius: 10px;
+            background: var(--surface); color: var(--text);
+            font-family: inherit; font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .search-input::placeholder { color: var(--text-muted); }
         .add-btn {
             background: var(--gradient); color: #fff; padding: 11px 20px;
             font-weight: 600; box-shadow: 0 4px 14px rgba(99,102,241,0.35);
-            margin-left: auto;
         }
         .add-btn:hover { box-shadow: 0 6px 18px rgba(99,102,241,0.5); }
+
+        /* TOASTS */
+        .toast-container {
+            position: fixed; bottom: 24px; right: 24px;
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 9999; pointer-events: none;
+        }
+        .toast {
+            background: var(--surface); border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            padding: 14px 18px; border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            font-size: 14px; font-weight: 500; color: var(--text);
+            display: flex; align-items: center; gap: 10px;
+            animation: toastIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 260px; max-width: 380px;
+            pointer-events: auto;
+        }
+        .toast.toast-success { border-left-color: var(--success); }
+        .toast.toast-danger { border-left-color: var(--danger); }
+        .toast.toast-info { border-left-color: var(--primary); }
+        .toast.toast-warning { border-left-color: var(--warning); }
+        .toast.hide { animation: toastOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
 
         /* TICKETS */
         .ticket {
@@ -224,7 +263,7 @@
             .chart-card { flex-direction: column; }
             .chart-info { width: 100%; }
             .header-controls { width: 100%; }
-            .add-btn { margin-left: 0; width: 100%; justify-content: center; }
+            .add-btn { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -295,14 +334,13 @@
         </div>
 
         <div class="filters">
-    <input type="text" id="search-input" class="search-input" placeholder="🔍 Поиск по кабинету, автору или проблеме...">
-    <a href="/report" target="_blank" class="btn btn-ghost">📋 Отчёт</a>
-    <a href="/add" class="btn add-btn">➕ Добавить заявку</a>
-</div>
-
-<div id="toast-container" class="toast-container"></div>
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Поиск по кабинету, автору или проблеме...">
+            <a href="/report" target="_blank" class="btn btn-ghost">📋 Отчёт</a>
+            <a href="/add" class="btn add-btn">➕ Добавить заявку</a>
+        </div>
 
         <div id="tickets-container"></div>
+        <div id="toast-container" class="toast-container"></div>
     </div>
 
     <script>
@@ -330,6 +368,8 @@
 
         // --- ФИЛЬТРЫ ---
         let currentFilter = 'all';
+        let searchQuery = '';
+
         document.querySelectorAll('.stat-card').forEach(card => {
             card.addEventListener('click', () => {
                 document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
@@ -378,49 +418,42 @@
         }
 
         function parseDate(str) {
-    if (!str) return new Date();
-    // Новый формат: ISO (2026-09-22T19:51:18.507265)
-    if (str.includes('T')) {
-        // Убираем микросекунды, оставляем миллисекунды — некоторые браузеры не любят 6 знаков
-        let cleaned = str.replace(/(\.\d{3})\d+/, '$1');
-        // Если нет таймзоны — добавляем Z (UTC)
-        if (!cleaned.match(/[Z+\-]\d*$/)) cleaned += 'Z';
-        return new Date(cleaned);
-    }
-    // Старый формат: dd.mm.yyyy hh:mm
-    const m = str.match(/(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+)/);
-    if (m) return new Date(m[3], m[2] - 1, m[1], m[4], m[5]);
-    return new Date(str);
-}
+            if (!str) return new Date();
+            if (str.includes('T')) {
+                let cleaned = str.replace(/(\.\d{3})\d+/, '$1');
+                if (!cleaned.match(/[Z+\-]\d*$/)) cleaned += 'Z';
+                return new Date(cleaned);
+            }
+            const m = str.match(/(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+)/);
+            if (m) return new Date(m[3], m[2] - 1, m[1], m[4], m[5]);
+            return new Date(str);
+        }
 
-function timeAgo(isoStr) {
-    try {
-        const date = parseDate(isoStr);
-        const diff = Date.now() - date.getTime();
-        const secs = Math.floor(diff / 1000);
-        if (secs < 5) return 'только что';
-        if (secs < 60) return `${secs} сек назад`;
-        const mins = Math.floor(secs / 60);
-        if (mins < 60) return `${mins} мин назад`;
-        const h = Math.floor(mins / 60);
-        if (h < 24) return `${h} ч назад`;
-        const d = Math.floor(h / 24);
-        if (d === 1) return 'вчера';
-        if (d < 7) return `${d} дн назад`;
-        return date.toLocaleDateString('ru-RU');
-    } catch (e) { 
-        console.error('Ошибка парсинга даты:', isoStr, e);
-        return isoStr; 
-    }
-}
+        function timeAgo(isoStr) {
+            try {
+                const date = parseDate(isoStr);
+                const diff = Date.now() - date.getTime();
+                const secs = Math.floor(diff / 1000);
+                if (secs < 5) return 'только что';
+                if (secs < 60) return `${secs} сек назад`;
+                const mins = Math.floor(secs / 60);
+                if (mins < 60) return `${mins} мин назад`;
+                const h = Math.floor(mins / 60);
+                if (h < 24) return `${h} ч назад`;
+                const d = Math.floor(h / 24);
+                if (d === 1) return 'вчера';
+                if (d < 7) return `${d} дн назад`;
+                return date.toLocaleDateString('ru-RU');
+            } catch (e) { return isoStr; }
+        }
 
-function isOverdue(isoStr) {
-    try {
-        const date = parseDate(isoStr);
-        const days = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
-        return days >= 3;
-    } catch (e) { return false; }
-}
+        function isOverdue(isoStr) {
+            try {
+                const date = parseDate(isoStr);
+                const days = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+                return days >= 3;
+            } catch (e) { return false; }
+        }
 
         function renderTicket(t, index) {
             let statusClass, statusBadge, statusIcon;
@@ -483,14 +516,23 @@ function isOverdue(isoStr) {
         function renderTickets(tickets) {
             lastTickets = tickets;
             let filtered = tickets;
-            if (currentFilter !== 'all') filtered = tickets.filter(t => t.status === currentFilter);
+            if (currentFilter !== 'all') filtered = filtered.filter(t => t.status === currentFilter);
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                filtered = filtered.filter(t =>
+                    (t.room || '').toLowerCase().includes(q) ||
+                    (t.author || '').toLowerCase().includes(q) ||
+                    (t.issue || '').toLowerCase().includes(q) ||
+                    (t.category || '').toLowerCase().includes(q)
+                );
+            }
             if (!filtered.length) {
-                const msg = currentFilter === 'all'
+                const msg = currentFilter === 'all' && !searchQuery
                     ? { title: 'Заявок пока нет', sub: 'Всё работает — можно выдохнуть!' }
-                    : { title: 'Здесь пусто', sub: 'В этой категории заявок пока нет.' };
+                    : { title: 'Ничего не найдено', sub: 'Попробуй изменить фильтр или поиск.' };
                 ticketsContainer.innerHTML = `
                     <div class="empty">
-                        <span class="empty-icon">${currentFilter === 'all' ? '✨' : '📭'}</span>
+                        <span class="empty-icon">${currentFilter === 'all' && !searchQuery ? '✨' : '🔍'}</span>
                         <div class="empty-text">${msg.title}</div>
                         <div class="empty-sub">${msg.sub}</div>
                     </div>`;
@@ -566,8 +608,49 @@ function isOverdue(isoStr) {
         fetchTickets();
         setInterval(fetchTickets, 10000);
 
+        // --- ПОИСК ---
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim();
+                renderTickets(lastTickets);
+            });
+        }
+
+        // --- TOAST-УВЕДОМЛЕНИЯ ---
+        function showToast(message, type = 'info') {
+            const icons = { success: '✅', danger: '🗑️', info: 'ℹ️', warning: '⚠️' };
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<span style="font-size:18px;">${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const toastParam = urlParams.get('toast');
+        if (toastParam) {
+            const messages = {
+                'created': { text: 'Заявка успешно создана!', type: 'success' },
+                'progress': { text: 'Заявка взята в работу', type: 'info' },
+                'resolved': { text: 'Заявка выполнена!', type: 'success' },
+                'deleted': { text: 'Заявка удалена', type: 'danger' },
+                'commented': { text: 'Комментарий сохранён', type: 'info' }
+            };
+            const msg = messages[toastParam];
+            if (msg) {
+                setTimeout(() => showToast(msg.text, msg.type), 300);
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }
+
         // --- WEB PUSH ---
         const VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy";
+
         function urlBase64ToUint8Array(base64String) {
             const cleanedString = base64String.replace(/[^A-Za-z0-9\-_]/g, '');
             const padding = '='.repeat((4 - cleanedString.length % 4) % 4);
@@ -577,6 +660,7 @@ function isOverdue(isoStr) {
             for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
             return outputArray;
         }
+
         function subscribeUser(registration) {
             registration.pushManager.subscribe({
                 userVisibleOnly: true,
@@ -590,6 +674,7 @@ function isOverdue(isoStr) {
             .then(r => r.ok ? console.log('Подписка сохранена') : console.error('Ошибка'))
             .catch(e => console.error('Ошибка при подписке:', e));
         }
+
         if ('serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.register('/sw.js')
                 .then(registration => {
