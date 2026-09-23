@@ -22,11 +22,29 @@ db = SQLAlchemy(app)
 
 ADMIN_PASSWORD = 'admin123'  # Поменяй на свой пароль!
 
-VAPID_PUBLIC_KEY = "BOOk-J5TstzjT2OUNrELa7ka1FNcHq4o7WKESG7E-SVTVzd5j_PxrP16p6oHvOBsLrILMyxWXsAz8pPn3sA_cuM"
+import base64
+from cryptography.hazmat.primitives.asymmetric import ec
+from py_vapid import Vapid
 
-# Читаем приватный ключ из файла, чтобы не мучиться с копированием
-with open('private_key.pem', 'r') as f:
-    VAPID_PRIVATE_KEY = f.read()
+# --- VAPID КЛЮЧИ (однострочные) ---
+# Приватный ключ (43 символа, одна строка) - берём из keys_single.txt
+_PRIVATE_B64 = "вставь_сюда_первую_строку_из_keys_single.txt"
+
+# Публичный ключ (87 символов, одна строка)
+VAPID_PUBLIC_KEY = "вставь_сюда_вторую_строку_из_keys_single.txt"
+
+# Восстанавливаем приватный ключ из base64
+def _b64d(s):
+    return base64.urlsafe_b64decode(s + '=' * (-len(s) % 4))
+
+_private_value = int.from_bytes(_b64d(_PRIVATE_B64), 'big')
+_private_key_obj = ec.derive_private_key(_private_value, ec.SECP256R1())
+
+VAPID_PRIVATE_KEY = Vapid()
+VAPID_PRIVATE_KEY.private_key = _private_key_obj
+VAPID_PRIVATE_KEY.public_key = _private_key_obj.public_key()
+
+VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}
 
 VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}
 
