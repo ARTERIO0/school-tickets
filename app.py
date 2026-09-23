@@ -9,7 +9,7 @@ from pywebpush import webpush, WebPushException
 app = Flask(__name__)
 app.secret_key = 'school_tickets_secret_key_12345'
 
-# --- НАСТРОЙКА БАЗЫ ДАННЫХ ---
+# --- DATABASE ---
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///tickets.db')
 if DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
@@ -20,30 +20,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-ADMIN_PASSWORD = 'admin123'  # Поменяй на свой пароль!
+# --- ПАРОЛИ ---
+# Общий пароль для всех учителей. Скажи его на педсовете.
+TEACHER_PASSWORD = 'school2026'
+# Пароль администрации (поменяй на свой!)
+ADMIN_PASSWORD = 'admin123'
 
-# Приватный ключ берём из переменной окружения Render
+# --- VAPID ---
+VAPID_PUBLIC_KEY = "BFAWX562uiK0qzyL-U08CcqdJP3odtYP8hLapr8qn5N1l1R10sMUjMsT9hpqawt0eq0UwcxFPDyOZGXt8UXXy"
 VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '').replace('\\n', '\n')
-
-# Публичный ключ (вторую строку из keys_single.txt — она должна быть 87 символов)
-VAPID_PUBLIC_KEY = "BF15spp6EaAC90TLyIw9zN_vAfXBHcz5Tq78QmUxn4PCgN74fNSGnU1ubQFsSx8S5hwEGGJ6wNdIXKKlso73WA0"
-def _b64d(s):
-    return base64.urlsafe_b64decode(s + '=' * (-len(s) % 4))
-
-# Собираем приватный ключ в PEM прямо в Python (не нужен py_vapid!)
-_private_value = int.from_bytes(_b64d(_PRIVATE_B64), 'big')
-_private_key_obj = ec.derive_private_key(_private_value, ec.SECP256R1())
-
-VAPID_PRIVATE_KEY = _private_key_obj.private_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.NoEncryption()
-).decode('utf-8')
-
-VAPID_CLAIMS = {"sub": "mailto:artnedov@gmail.com"}
+VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}
 
 
-# --- МОДЕЛИ БАЗЫ ДАННЫХ ---
 class Ticket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room = db.Column(db.String(50), nullable=False)
@@ -69,6 +57,17 @@ def service_worker():
 
 
 def login_required(f):
+    """Пускает только того, кто вошёл (учитель или админ)."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('teacher_name') and not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def admin_required(f):
+    """Пускает только администрацию."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('logged_in'):
@@ -83,49 +82,66 @@ def send_push_notification(title, body):
         for sub in subs:
             sub_info = {"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}}
             try:
-                webpush(
-                    subscription_info=sub_info,
-                    data=json.dumps({"title": title, "body": body}),
-                    vapid_private_key=VAPID_PRIVATE_KEY,
-                    vapid_claims=VAPID_CLAIMS
-                )
+                webpush(subscription_info=sub_info,
+                        data=json.dumps({"title": title, "body": body}),
+                        vapid_private_key=VAPID_PRIVATE_KEY,
+                        vapid_claims=VAPID_CLAIMS)
             except WebPushException as e:
-                print(f"WebPush ошибка для {sub.endpoint[:30]}: {e}")
+                print(f"WebPush ошибка: {e}")
                 if e.response and e.response.status_code in [404, 410]:
                     db.session.delete(sub)
                     db.session.commit()
             except Exception as e:
                 print(f"Неизвестная ошибка push: {e}")
     except Exception as e:
-        # Самое главное: push не должен ломать создание заявки!
-        print(f"Критическая ошибка в send_push_notification: {e}")
+        print(f"Критическая ошибка push: {e}")
 
 
+# --- ЕДИНАЯ СТРАНИЦА ВХОДА ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
     if request.method == 'POST':
-        if request.form['password'] == ADMIN_PASSWORD:
-            session['logged_in'] = True
-            return redirect(url_for('index'))
-        else:
-            error = 'Неверный пароль'
+        password = request.form.get('password', '')
+        name = request.form.get('name', '').strip()
+        role = request.form.get('role', 'teacher')
+
+        if role == 'admin':
+            if password == ADMIN_PASSWORD:
+                session['logged_in'] = True
+                session.pop('teacher_name', None)
+                return redirect(url_for('index'))
+            error = 'Неверный пароль администрации'
+        else:  # teacher
+            if not name:
+                error = 'Введите ваше имя'
+            elif password != TEACHER_PASSWORD:
+                error = 'Неверный пароль. Спросите у администрации.'
+            else:
+                session['teacher_name'] = name
+                session.pop('logged_in', None)
+                return redirect(url_for('index'))
+
     return render_template('login.html', error=error)
 
 
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
-    return redirect(url_for('index'))
+    session.pop('teacher_name', None)
+    return redirect(url_for('login'))
 
 
+# --- ОСНОВНЫЕ МАРШРУТЫ (только для вошедших) ---
 @app.route('/')
+@login_required
 def index():
     tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
     return render_template('index.html', tickets=tickets, vapid_public_key=VAPID_PUBLIC_KEY)
 
 
 @app.route('/report')
+@login_required
 def report():
     tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
@@ -133,6 +149,7 @@ def report():
 
 
 @app.route('/api/tickets')
+@login_required
 def api_tickets():
     tickets = Ticket.query.order_by(Ticket.priority.desc(), Ticket.id.desc()).all()
     return jsonify([{
@@ -143,14 +160,22 @@ def api_tickets():
 
 
 @app.route('/add', methods=['GET', 'POST'])
+@login_required
 def add():
+    # Автор заявки
+    if session.get('logged_in'):
+        author_name = 'Администрация'
+    elif session.get('teacher_name'):
+        author_name = session['teacher_name']
+    else:
+        author_name = 'Аноним'
+
     if request.method == 'POST':
         room = request.form['room']
         issue = request.form['issue']
-        author = request.form.get('author', 'Аноним')
         priority = request.form.get('priority', 'Обычная')
         category = request.form.get('category', '📝 Другое')
-        ticket = Ticket(room=room, issue=issue, author=author, priority=priority, category=category)
+        ticket = Ticket(room=room, issue=issue, author=author_name, priority=priority, category=category)
         db.session.add(ticket)
         db.session.commit()
 
@@ -159,11 +184,11 @@ def add():
             body=f"{category}: {issue[:40]}{'...' if len(issue) > 40 else ''}"
         )
         return redirect(url_for('index') + '?toast=created')
-    return render_template('add.html')
+    return render_template('add.html', author_name=author_name)
 
 
 @app.route('/progress/<int:ticket_id>')
-@login_required
+@admin_required
 def progress(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     ticket.status = 'В работе'
@@ -172,7 +197,7 @@ def progress(ticket_id):
 
 
 @app.route('/resolve/<int:ticket_id>')
-@login_required
+@admin_required
 def resolve(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     ticket.status = 'Выполнено'
@@ -181,7 +206,7 @@ def resolve(ticket_id):
 
 
 @app.route('/delete/<int:ticket_id>')
-@login_required
+@admin_required
 def delete_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     db.session.delete(ticket)
@@ -190,7 +215,7 @@ def delete_ticket(ticket_id):
 
 
 @app.route('/comment/<int:ticket_id>', methods=['POST'])
-@login_required
+@admin_required
 def add_comment(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     ticket.comment = request.form.get('comment', '').strip()
@@ -199,6 +224,7 @@ def add_comment(ticket_id):
 
 
 @app.route('/subscribe', methods=['POST'])
+@login_required
 def subscribe():
     data = request.get_json()
     if not data:
