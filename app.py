@@ -28,10 +28,10 @@ from py_vapid import Vapid
 
 # --- VAPID КЛЮЧИ (однострочные) ---
 # Приватный ключ (43 символа, одна строка) - берём из keys_single.txt
-_PRIVATE_B64 = "вставь_сюда_первую_строку_из_keys_single.txt"
+_PRIVATE_B64 = "3JO-aZo9yPNOsZVAKfrkikyR6Y7Jee5BLdaOBtSFLTc"
 
 # Публичный ключ (87 символов, одна строка)
-VAPID_PUBLIC_KEY = "вставь_сюда_вторую_строку_из_keys_single.txt"
+VAPID_PUBLIC_KEY = "BF15spp6EaAC90TLyIw9zN_vAfXBHcz5Tq78QmUxn4PCgN74fNSGnU1ubQFsSx8S5hwEGGJ6wNdIXKKlso73WA0"
 
 # Восстанавливаем приватный ключ из base64
 def _b64d(s):
