@@ -24,29 +24,29 @@ ADMIN_PASSWORD = 'admin123'  # Поменяй на свой пароль!
 
 import base64
 from cryptography.hazmat.primitives.asymmetric import ec
-from py_vapid import Vapid
+from cryptography.hazmat.primitives import serialization
 
-# --- VAPID КЛЮЧИ (однострочные) ---
-# Приватный ключ (43 символа, одна строка) - берём из keys_single.txt
+# --- VAPID КЛЮЧИ (однострочные из keys_single.txt) ---
+# Приватный ключ (43 символа, первая строка из файла)
 _PRIVATE_B64 = "3JO-aZo9yPNOsZVAKfrkikyR6Y7Jee5BLdaOBtSFLTc"
 
-# Публичный ключ (87 символов, одна строка)
+# Публичный ключ (87 символов, вторая строка из файла)
 VAPID_PUBLIC_KEY = "BF15spp6EaAC90TLyIw9zN_vAfXBHcz5Tq78QmUxn4PCgN74fNSGnU1ubQFsSx8S5hwEGGJ6wNdIXKKlso73WA0"
 
-# Восстанавливаем приватный ключ из base64
 def _b64d(s):
     return base64.urlsafe_b64decode(s + '=' * (-len(s) % 4))
 
+# Собираем приватный ключ в PEM прямо в Python (не нужен py_vapid!)
 _private_value = int.from_bytes(_b64d(_PRIVATE_B64), 'big')
 _private_key_obj = ec.derive_private_key(_private_value, ec.SECP256R1())
 
-VAPID_PRIVATE_KEY = Vapid()
-VAPID_PRIVATE_KEY.private_key = _private_key_obj
-VAPID_PRIVATE_KEY.public_key = _private_key_obj.public_key()
+VAPID_PRIVATE_KEY = _private_key_obj.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=serialization.NoEncryption()
+).decode('utf-8')
 
-VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}
-
-VAPID_CLAIMS = {"sub": "mailto:your_email@example.com"}
+VAPID_CLAIMS = {"sub": "mailto:artnedov@gmail.com"}
 
 
 # --- МОДЕЛИ БАЗЫ ДАННЫХ ---
