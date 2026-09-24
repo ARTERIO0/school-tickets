@@ -111,7 +111,52 @@
             background: rgba(239,68,68,0.1);
             border-left: 3px solid var(--danger);
         }
-        .hint { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 14px; }
+
+        /* --- Блок с подсказкой пароля --- */
+        .password-hint {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .show-password-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .show-password-btn:hover {
+            color: var(--primary);
+            background: rgba(99,102,241,0.08);
+        }
+        .password-value {
+            margin-top: 8px;
+            padding: 12px 14px;
+            background: linear-gradient(90deg, rgba(99,102,241,0.1), rgba(139,92,246,0.05));
+            border: 1px dashed rgba(99,102,241,0.4);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text);
+            animation: fadeIn 0.3s ease;
+        }
+        .password-value strong {
+            color: var(--primary);
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+        .password-value .hint-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body>
@@ -141,7 +186,17 @@
                 <label>Общий пароль</label>
                 <input type="password" name="password" placeholder="Введите пароль" required>
                 <button type="submit" class="btn">Войти</button>
-                <div class="hint">Пароль можно узнать у администрации</div>
+
+                <!-- Подсказка с паролем -->
+                <div class="password-hint">
+                    <button type="button" class="show-password-btn" onclick="togglePassword()">
+                        👁 Показать пароль
+                    </button>
+                    <div class="password-value" id="password-value" style="display: none;">
+                        <div class="hint-label">Общий пароль для учителей</div>
+                        <strong>school2026</strong>
+                    </div>
+                </div>
             </form>
 
             <!-- Вкладка админа -->
@@ -150,7 +205,9 @@
                 <label>Пароль администрации</label>
                 <input type="password" name="password" placeholder="Введите пароль" required>
                 <button type="submit" class="btn btn-admin">Войти как администрация</button>
-                <div class="hint">Полный доступ: удаление, комментарии, статусы</div>
+                <div class="hint" style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:14px;">
+                    Пароль известен только технику и заместителям
+                </div>
             </form>
         </div>
     </div>
@@ -177,6 +234,19 @@
                 if (input) input.focus();
             });
         });
+
+        // Показать/скрыть пароль учителя
+        function togglePassword() {
+            const el = document.getElementById('password-value');
+            const btn = document.querySelector('.show-password-btn');
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+                btn.innerHTML = '🙈 Скрыть пароль';
+            } else {
+                el.style.display = 'none';
+                btn.innerHTML = '👁 Показать пароль';
+            }
+        }
     </script>
 </body>
 </html>
